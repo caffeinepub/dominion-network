@@ -1,0 +1,179 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Frontend fixes for admin routing access, navigation correctness, layout overlap, build stability, and 5D background assets",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Ensure all /admin/* routes reliably allow admins and block non-admins using a stable admin-role check from the frontend.",
+      "acceptanceCriteria": [
+        "When logged in as an admin identity, navigating directly to each admin route defined in frontend/src/App.tsx renders the page content (not the access denied screen).",
+        "When logged in as a non-admin identity, navigating to any \"/admin/*\" route shows the access denied UI.",
+        "Backend exposes a stable admin-check method used by the frontend (e.g., the actor method checked by useIsCallerAdmin) and it returns correct values for admin vs non-admin callers.",
+        "No admin pages require additional non-admin approval gates beyond admin role checks."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Harden the admin-role query used by AdminRouteGuard: key it by the authenticated principal (to prevent stale cached guest results after login), only evaluate when authentication is present/ready, and normalize failure modes so admins are not incorrectly denied due to transient actor/identity timing."
+        },
+        {
+          "path": "frontend/src/components/AdminRouteGuard.tsx",
+          "operation": "modify",
+          "description": "Update the guard logic so it waits for authentication readiness before evaluating admin status, and ensures admin-only gating is strictly based on the admin role result (no additional approval gating)."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Audit the route tree and ensure every \"/admin/*\" route is consistently wrapped by AdminRouteGuard (including any newly added or previously missed admin rooms)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Fix Admin dropdown menu items and admin navigation so every visible admin option routes to a real, working admin route.",
+      "acceptanceCriteria": [
+        "Every Admin dropdown option in frontend/src/components/Header.tsx navigates to a route that exists in frontend/src/App.tsx.",
+        "For an admin user, each Admin dropdown destination loads without runtime errors.",
+        "No duplicate or misleading menu items remain (each label corresponds to the page it opens)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Verify each Admin dropdown item path matches an existing route in frontend/src/App.tsx; remove/rename any misleading labels, fix any incorrect paths, and ensure mobile nav equivalents (if present) point to the same valid routes."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "If any admin destination is referenced by the Header but missing in the route tree, wire the existing page component into the router under the intended path (without introducing new top-level pages beyond what the navigation requires)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Resolve overlapping/clipping issues for header navigation, dropdowns, mobile menu, and admin pages across common breakpoints.",
+      "acceptanceCriteria": [
+        "No visible UI elements overlap in Header navigation, Admin dropdown, or mobile menu on typical breakpoints (mobile, tablet, desktop).",
+        "Dropdown menus remain fully usable (scrollable when needed) without spilling outside the viewport.",
+        "Admin pages do not have sections where controls or text are clipped/hidden due to container overflow or z-index issues."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Adjust header/nav layout classes to prevent truncation/overlap (e.g., enforce min-w-0 where needed, improve wrapping/truncation on labels, ensure dropdown content has safe max-height + scroll, and ensure correct stacking context so menus render above page content)."
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Add/adjust global utilities for safe overflow handling and stacking contexts used by navigation and dropdowns (e.g., consistent z-index layers, overflow-x containment, and responsive typography/spacing to avoid clipping)."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Ensure the layout containers do not inadvertently clip overlays (dropdowns/modals) and that main content spacing works across breakpoints while maintaining the existing dark futuristic/theater look."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Fix frontend build/runtime errors that block reliable rebuild and deployment, including missing assets and TypeScript/runtime exceptions.",
+      "acceptanceCriteria": [
+        "The project builds successfully (frontend + backend) with no TypeScript compile errors and no Motoko compile errors.",
+        "App loads without immediate runtime exceptions in the browser console for core navigation (home + at least one admin route as admin).",
+        "Backend canister deploy completes without trapping during initialization or during common calls like admin check.",
+        "Missing static assets referenced by CSS/routes do not cause broken rendering (images exist or references are corrected)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Resolve any TypeScript/runtime issues in query hooks that can break builds (including correcting imports/types for blob/image handling). If using the selected blob-storage component’s ExternalBlob type/class, verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Ensure background switching does not reference missing static assets and cannot throw during route changes; validate fallbacks are safe so the app always renders."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Eliminate runtime navigation errors (e.g., incorrect navigate() usage, malformed params, or menu states causing rendering exceptions) that could prevent successful deployment or core navigation."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Include required 5D-style background image assets and keep route-based background switching working with readable contrast.",
+      "acceptanceCriteria": [
+        "The following files exist under frontend/public/assets/generated and load successfully at runtime: default-bg.dim_1920x1080.png, admin-bg.dim_1920x1080.png, finance-bg.dim_1920x1080.png, commerce-bg.dim_1920x1080.png, chat-bg.dim_1920x1080.png.",
+        "Route-based background switching in frontend/src/components/Layout.tsx displays: admin background on /admin/*; finance on /wallet and /credit-card; commerce on /mall; chat on /hiiyah-chat; default otherwise.",
+        "Text remains readable over the backgrounds (sufficient contrast maintained)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
+          "operation": "create",
+          "description": "Add the required static background asset at frontend/public/assets/generated/default-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
+        },
+        {
+          "path": "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
+          "operation": "create",
+          "description": "Add the required static background asset at frontend/public/assets/generated/admin-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
+        },
+        {
+          "path": "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
+          "operation": "create",
+          "description": "Add the required static background asset at frontend/public/assets/generated/finance-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
+        },
+        {
+          "path": "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
+          "operation": "create",
+          "description": "Add the required static background asset at frontend/public/assets/generated/commerce-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
+        },
+        {
+          "path": "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
+          "operation": "create",
+          "description": "Add the required static background asset at frontend/public/assets/generated/chat-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Confirm route-to-background mapping matches requirements (/admin/* => admin, /wallet & /credit-card => finance, /mall => commerce, /hiiyah-chat => chat, default otherwise) and ensure readable foreground contrast is preserved."
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Wire the background CSS classes used by Layout (e.g., bg-default-area/bg-admin-area/bg-finance-area/bg-commerce-area/bg-chat-area) to the corresponding static files: frontend/public/assets/generated/default-bg.dim_1920x1080.png, admin-bg.dim_1920x1080.png, finance-bg.dim_1920x1080.png, commerce-bg.dim_1920x1080.png, chat-bg.dim_1920x1080.png, and add a consistent contrast overlay strategy for text readability."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Apply a consistent dark futuristic/theater theme across shared UI while implementing overlap fixes.",
+      "acceptanceCriteria": [
+        "Key shared UI surfaces (Header, Footer, page containers, admin pages) follow a consistent spacing and typography system.",
+        "No new conflicting color theme is introduced; changes remain consistent with the existing dark futuristic/theater look defined in global styles."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Refine global typography/spacing tokens and shared surface styling to stay coherent with the existing dark futuristic/theater theme (and to support the overlap/clipping fixes consistently across pages)."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "If needed to support consistent spacing/typography and responsive behavior, adjust Tailwind theme tokens (colors, font sizes, container/padding, and z-index scale) without introducing a conflicting new palette."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Align header component styling (font sizes, padding, button sizing, truncation behavior) with the global theme updates to ensure consistent look and avoid overlap regressions."
+        }
+      ]
+    }
+  ]
+}

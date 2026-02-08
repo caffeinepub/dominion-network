@@ -1,2 +1,3 @@
-# dominion-network
-Exported from Caffeine project: Fix admin access, UI overlap, and deployment/build failures; ensure 5D background assets exist
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

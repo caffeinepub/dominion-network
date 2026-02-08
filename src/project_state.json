@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [
+    "Deployment/build process intermittently fails (deployment error / unexpected issue) when attempting to redeploy.",
+    "Admin access/permissions issues: admin unable to access all areas as expected.",
+    "UI layout issues: overlapping elements reported.",
+    "General application errors reported (unspecified)."
+  ],
+  "isFixRequest": true,
+  "imageRequirements": "## Required Images\n- Futuristic admin-control-room scene with strong depth, layered holographic panels, dark tech surfaces, neon accents, subtle circuit patterns (admin-bg.dim_1920x1080.png)\n- Futuristic finance scene with metallic gradients, holographic grid lines, floating UI widgets, and deep parallax lighting (finance-bg.dim_1920x1080.png)\n- Futuristic commerce/showroom scene with sci-fi lighting, geometric depth, reflective floor, and layered product-display silhouettes (commerce-bg.dim_1920x1080.png)\n- Futuristic communications scene with subtle digital waveforms, HUD elements, soft bokeh lights, and depth-stacked interface shapes (chat-bg.dim_1920x1080.png)\n- Futuristic general/landing scene with cinematic depth, abstract holographic shapes, and a dark high-contrast tech atmosphere (default-bg.dim_1920x1080.png)",
+  "existing_features": [
+    {
+      "id": "feature-fix-admin-authorization-so-that-any-authenticated-user-who-has-the-admin-role-can-access-every-route-under-admin-including-admin-approvals-admin-invite-links-and-all-other-admin-rooms-while-non-admin-users-remain-blocked-from-all-admin-routes",
+      "title": "Fix admin authorization so that any authenticated user who has the admin role can access every route under \"/admin/*\" (including \"/admin/approvals\", \"/admin/invite-links\", and all other admin rooms), while non-admin users remain blocked from all \"/admin/*\" routes.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-audit-and-fix-the-admin-menu-and-all-admin-navigation-links-so-that-every-visible-admin-menu-option-routes-to-a-real-working-route-and-successfully-loads-for-admins-no-dead-links-incorrect-paths-or-items-navigating-to-the-wrong-page",
+      "title": "Audit and fix the Admin menu and all admin navigation links so that every visible admin menu option routes to a real, working route and successfully loads for admins (no dead links, incorrect paths, or items navigating to the wrong page).",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-overlapping-clipping-layout-issues-across-the-app-prioritize-navigation-dropdown-menus-mobile-menu-and-admin-pages-so-all-labels-and-controls-remain-readable-wrap-truncate-appropriately-and-stay-within-the-viewport-on-common-screen-sizes",
+      "title": "Fix overlapping/clipping layout issues across the app (prioritize navigation, dropdown menus, mobile menu, and admin pages) so all labels and controls remain readable, wrap/truncate appropriately, and stay within the viewport on common screen sizes.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-resolve-all-build-runtime-errors-that-prevent-successful-build-and-deployment-ensure-the-app-can-be-rebuilt-and-redeployed-reliably-without-deployment-build-failures",
+      "title": "Resolve all build/runtime errors that prevent successful build and deployment; ensure the app can be rebuilt and redeployed reliably without deployment/build failures.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-include-the-required-futuristic-5d-style-background-image-set-as-static-frontend-assets-and-ensure-the-existing-route-based-background-switching-in-layout-continues-to-apply-the-correct-background-per-major-area-with-readable-foreground-contrast",
+      "title": "Generate and include the required futuristic 5D-style background image set as static frontend assets, and ensure the existing route-based background switching in Layout continues to apply the correct background per major area with readable foreground contrast.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-consistent-coherent-visual-theme-across-the-app-typography-spacing-and-component-styling-aligned-with-the-existing-dark-futuristic-theater-styling-and-enforce-it-consistently-while-addressing-the-overlap-fixes",
+      "title": "Apply a consistent, coherent visual theme across the app (typography, spacing, and component styling) aligned with the existing dark futuristic/theater styling, and enforce it consistently while addressing the overlap fixes.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [],
+  "projectName": "Fix admin access, UI overlap, and deployment/build failures; ensure 5D background assets exist",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

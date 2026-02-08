@@ -1,0 +1,151 @@
+{
+  "kind": "build_request",
+  "title": "Fix admin access, UI overlap, and deployment/build failures; ensure 5D background assets exist",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Fix admin authorization so that any authenticated user who has the admin role can access every route under \"/admin/*\" (including \"/admin/approvals\", \"/admin/invite-links\", and all other admin rooms), while non-admin users remain blocked from all \"/admin/*\" routes.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "1. Correct all admin access issues.\n2. Make admin is able to access all."
+        ]
+      },
+      "acceptanceCriteria": [
+        "When logged in as an admin identity, navigating directly to each admin route defined in frontend/src/App.tsx renders the page content (not the access denied screen).",
+        "When logged in as a non-admin identity, navigating to any \"/admin/*\" route shows the access denied UI.",
+        "Backend exposes a stable admin-check method used by the frontend (e.g., the actor method checked by useIsCallerAdmin) and it returns correct values for admin vs non-admin callers.",
+        "No admin pages require additional non-admin approval gates beyond admin role checks."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Audit and fix the Admin menu and all admin navigation links so that every visible admin menu option routes to a real, working route and successfully loads for admins (no dead links, incorrect paths, or items navigating to the wrong page).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "2. Make admin is able to access all.",
+          "4. Correct all errors."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Every Admin dropdown option in frontend/src/components/Header.tsx navigates to a route that exists in frontend/src/App.tsx.",
+        "For an admin user, each Admin dropdown destination loads without runtime errors.",
+        "No duplicate or misleading menu items remain (each label corresponds to the page it opens)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Fix overlapping/clipping layout issues across the app (prioritize navigation, dropdown menus, mobile menu, and admin pages) so all labels and controls remain readable, wrap/truncate appropriately, and stay within the viewport on common screen sizes.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "3. Correct all overlapping"
+        ]
+      },
+      "acceptanceCriteria": [
+        "No visible UI elements overlap in Header navigation, Admin dropdown, or mobile menu on typical breakpoints (mobile, tablet, desktop).",
+        "Dropdown menus remain fully usable (scrollable when needed) without spilling outside the viewport.",
+        "Admin pages do not have sections where controls or text are clipped/hidden due to container overflow or z-index issues."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Resolve all build/runtime errors that prevent successful build and deployment; ensure the app can be rebuilt and redeployed reliably without deployment/build failures.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "4. Correct all errors.",
+          "5. Fix all deployment issues.",
+          "Correct all issues and try again"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The project builds successfully (frontend + backend) with no TypeScript compile errors and no Motoko compile errors.",
+        "App loads without immediate runtime exceptions in the browser console for core navigation (home + at least one admin route as admin).",
+        "Backend canister deploy completes without trapping during initialization or during common calls like admin check.",
+        "Missing static assets referenced by CSS/routes do not cause broken rendering (images exist or references are corrected)."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Generate and include the required futuristic 5D-style background image set as static frontend assets, and ensure the existing route-based background switching in Layout continues to apply the correct background per major area with readable foreground contrast.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "project_state.json",
+          "recent-messages"
+        ],
+        "quotes": [
+          "add 5D-style background images per page."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The following files exist under frontend/public/assets/generated and load successfully at runtime: default-bg.dim_1920x1080.png, admin-bg.dim_1920x1080.png, finance-bg.dim_1920x1080.png, commerce-bg.dim_1920x1080.png, chat-bg.dim_1920x1080.png.",
+        "Route-based background switching in frontend/src/components/Layout.tsx displays: admin background on /admin/*; finance on /wallet and /credit-card; commerce on /mall; chat on /hiiyah-chat; default otherwise.",
+        "Text remains readable over the backgrounds (sufficient contrast maintained)."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Apply a consistent, coherent visual theme across the app (typography, spacing, and component styling) aligned with the existing dark futuristic/theater styling, and enforce it consistently while addressing the overlap fixes.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "Correct all issues and try again"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Key shared UI surfaces (Header, Footer, page containers, admin pages) follow a consistent spacing and typography system.",
+        "No new conflicting color theme is introduced; changes remain consistent with the existing dark futuristic/theater look defined in global styles."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor in backend/main.mo; only add backend/migration.mo if state migration is required.",
+    "Do not edit any files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT (compose them instead).",
+    "All user-facing text must be in English.",
+    "Background images must be served as static assets from frontend/public/assets/generated; do not proxy image delivery through the backend."
+  ],
+  "nonGoals": [
+    "Implementing new non-admin product features unrelated to admin access, overlap fixes, deployment reliability, or backgrounds.",
+    "Adding third-party authentication beyond Internet Identity.",
+    "Adding external databases, external backend services, or non-Motoko backends."
+  ],
+  "imageRequirements": {
+    "required": [
+      "Futuristic admin-control-room scene with strong depth, layered holographic panels, dark tech surfaces, neon accents, subtle circuit patterns (admin-bg.dim_1920x1080.png)",
+      "Futuristic finance scene with metallic gradients, holographic grid lines, floating UI widgets, and deep parallax lighting (finance-bg.dim_1920x1080.png)",
+      "Futuristic commerce/showroom scene with sci-fi lighting, geometric depth, reflective floor, and layered product-display silhouettes (commerce-bg.dim_1920x1080.png)",
+      "Futuristic communications scene with subtle digital waveforms, HUD elements, soft bokeh lights, and depth-stacked interface shapes (chat-bg.dim_1920x1080.png)",
+      "Futuristic general/landing scene with cinematic depth, abstract holographic shapes, and a dark high-contrast tech atmosphere (default-bg.dim_1920x1080.png)"
+    ],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

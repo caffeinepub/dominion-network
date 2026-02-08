@@ -1,0 +1,59 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-08T13:06:49.363Z",
+  "summary": "Diff implements frontend-side admin route guarding and various UI/theme/layout changes, plus additional hooks/pages updates to address build issues. However, the required generated 5D background image assets are not evidenced as added, and backend support for a stable admin-check method is not clearly evidenced in the truncated backend diff. Several unrelated feature enhancements (not requested) appear to have been introduced (notably a greatly expanded HeroHelper/AI assistant and people-free homepage background changes).",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Backend exposes a stable admin-check method used by the frontend (e.g., the actor method checked by useIsCallerAdmin) and it returns correct values for admin vs non-admin callers.",
+      "reason": "Frontend now calls actor.isCallerAdmin() (via useIsCallerAdmin) and App routes are wrapped with AdminRouteGuard, but the backend diff shown is truncated and does not provide evidence that a public isCallerAdmin method exists and is correct.",
+      "evidence": [
+        "backend/main.mo (truncated)",
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Generate and include the required futuristic 5D-style background image set as static frontend assets under frontend/public/assets/generated (default-bg.dim_1920x1080.png, admin-bg.dim_1920x1080.png, finance-bg.dim_1920x1080.png, commerce-bg.dim_1920x1080.png, chat-bg.dim_1920x1080.png).",
+      "reason": "The diff summary shows no added files and provides no evidence that these PNG assets were created under frontend/public/assets/generated.",
+      "evidence": [
+        "File diff summary: Added: 0",
+        "frontend-file-summaries.txt (mentions Layout/background classes but not the required image files being added)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Major expansion of HeroHelper into a floating AI assistant with voice capabilities, memory system, time-zone greetings, background monitoring mode, and comprehensive platform knowledge.",
+      "reason": "Not requested by any requirement; BuildRequest explicitly limits scope to admin access, overlap fixes, deployment/build reliability, and background assets.",
+      "evidence": [
+        "frontend-file-summaries.txt (\"frontend/src/components/HeroHelper.tsx\": Enhanced floating AI assistant with click-to-position functionality, full voice capabilities, memory system, ...)"
+      ]
+    },
+    {
+      "description": "Homepage/Hero background image changes emphasizing 'verified people-free' backgrounds and updated badge text (\"Streaming to 134 Countries Worldwide\").",
+      "reason": "Not requested; background requirements were specifically for the 5 named area backgrounds (admin/finance/commerce/chat/default), not additional homepage hero/background asset swaps or marketing copy changes.",
+      "evidence": [
+        "frontend-file-summaries.txt (\"frontend/src/components/Hero.tsx\": updated badge ... using ... \"homepage-hero-v40-people-free...\"; \"frontend/src/pages/HomePage.tsx\": updated to use exclusively verified people-free background images ...)"
+      ]
+    }
+  ],
+  "confidence": 0.66,
+  "changed_files": [
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/AdminRouteGuard.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/pages/AdminAdsPage.tsx",
+    "frontend/src/pages/AdminAffiliatePage.tsx",
+    "frontend/src/pages/AdminPricingTermsPage.tsx",
+    "frontend/src/pages/AffiliateDashboardPage.tsx",
+    "frontend/src/pages/SignUpPage.tsx",
+    "frontend/src/pages/TermsPage.tsx",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}

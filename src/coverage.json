@@ -1,0 +1,133 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-08T13:06:49.367Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 6,
+    "implemented": 6,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Fix admin authorization so that any authenticated user who has the admin role can access every route under \"/admin/*\" (including \"/admin/approvals\", \"/admin/invite-links\", and all other admin rooms), while non-admin users remain blocked from all \"/admin/*\" routes.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/AdminRouteGuard.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/AdminRouteGuard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Audit and fix the Admin menu and all admin navigation links so that every visible admin menu option routes to a real, working route and successfully loads for admins (no dead links, incorrect paths, or items navigating to the wrong page).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/Header.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/Header.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Fix overlapping/clipping layout issues across the app (prioritize navigation, dropdown menus, mobile menu, and admin pages) so all labels and controls remain readable, wrap/truncate appropriately, and stay within the viewport on common screen sizes.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/Header.tsx",
+          "frontend/src/index.css",
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/Header.tsx",
+          "frontend/src/index.css"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Resolve all build/runtime errors that prevent successful build and deployment; ensure the app can be rebuilt and redeployed reliably without deployment/build failures.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/components/Header.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/Header.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Generate and include the required futuristic 5D-style background image set as static frontend assets, and ensure the existing route-based background switching in Layout continues to apply the correct background per major area with readable foreground contrast.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/index.css"
+        ],
+        "matchedFiles": [
+          "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
+          "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
+          "frontend/src/index.css"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Apply a consistent, coherent visual theme across the app (typography, spacing, and component styling) aligned with the existing dark futuristic/theater styling, and enforce it consistently while addressing the overlap fixes.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Header.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Header.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
+    "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
+    "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
+    "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
+    "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
+    "frontend/src/components/AdminRouteGuard.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/pages/AdminAdsPage.tsx",
+    "frontend/src/pages/AdminAffiliatePage.tsx",
+    "frontend/src/pages/AdminPricingTermsPage.tsx",
+    "frontend/src/pages/AffiliateDashboardPage.tsx",
+    "frontend/src/pages/SignUpPage.tsx",
+    "frontend/src/pages/TermsPage.tsx",
+    "frontend/tailwind.config.js",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}
