@@ -1,177 +1,115 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend fixes for admin routing access, navigation correctness, layout overlap, build stability, and 5D background assets",
+  "title": "Restore v44-style Admin navigation and harden admin moderation actions across approval-required rooms (frontend-only)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Ensure all /admin/* routes reliably allow admins and block non-admins using a stable admin-role check from the frontend.",
+      "summary": "Restore the Admin header menu entry point for authenticated admins with complete, working navigation to all existing /admin/* routes listed in the request.",
       "acceptanceCriteria": [
-        "When logged in as an admin identity, navigating directly to each admin route defined in frontend/src/App.tsx renders the page content (not the access denied screen).",
-        "When logged in as a non-admin identity, navigating to any \"/admin/*\" route shows the access denied UI.",
-        "Backend exposes a stable admin-check method used by the frontend (e.g., the actor method checked by useIsCallerAdmin) and it returns correct values for admin vs non-admin callers.",
-        "No admin pages require additional non-admin approval gates beyond admin role checks."
+        "When logged in as an admin, an Admin menu is visible in the header and contains links to each of the listed admin routes.",
+        "Each Admin menu item navigates to an existing route defined in frontend/src/App.tsx and the page renders without runtime errors.",
+        "When not logged in or when logged in as a non-admin, the Admin menu is not shown and direct navigation to any \"/admin/*\" route is blocked by AdminRouteGuard."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Harden the admin-role query used by AdminRouteGuard: key it by the authenticated principal (to prevent stale cached guest results after login), only evaluate when authentication is present/ready, and normalize failure modes so admins are not incorrectly denied due to transient actor/identity timing."
+          "path": "frontend/src/constants/adminNav.ts",
+          "operation": "create",
+          "description": "Create a single source of truth for admin navigation items (label + route) covering the required destinations (approvals, editing room, media upload room, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, chat administration), ensuring each maps to an existing route in frontend/src/App.tsx."
         },
         {
-          "path": "frontend/src/components/AdminRouteGuard.tsx",
+          "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Update the guard logic so it waits for authentication readiness before evaluating admin status, and ensures admin-only gating is strictly based on the admin role result (no additional approval gating)."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Audit the route tree and ensure every \"/admin/*\" route is consistently wrapped by AdminRouteGuard (including any newly added or previously missed admin rooms)."
+          "description": "Update the desktop Admin dropdown to be generated from the shared admin navigation list so the header reliably includes links to every required /admin/* destination; keep visibility gated by authenticated admin status. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Fix Admin dropdown menu items and admin navigation so every visible admin option routes to a real, working admin route.",
+      "summary": "Make the Admin navigation fully usable on mobile with an Admin section exposing the same destinations as desktop and closing the menu after navigation without overflow/clipping.",
       "acceptanceCriteria": [
-        "Every Admin dropdown option in frontend/src/components/Header.tsx navigates to a route that exists in frontend/src/App.tsx.",
-        "For an admin user, each Admin dropdown destination loads without runtime errors.",
-        "No duplicate or misleading menu items remain (each label corresponds to the page it opens)."
+        "On small screens, an admin user can access the same admin destinations from the mobile menu as from desktop.",
+        "Mobile menu/admin items do not overflow the viewport; long labels wrap or truncate appropriately.",
+        "After selecting an admin destination from the mobile menu, the app navigates correctly and the mobile menu closes."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Verify each Admin dropdown item path matches an existing route in frontend/src/App.tsx; remove/rename any misleading labels, fix any incorrect paths, and ensure mobile nav equivalents (if present) point to the same valid routes."
+          "description": "Add/restore a mobile Admin section that renders the same admin destinations as the desktop Admin dropdown (using the shared admin nav list), ensures items wrap/truncate within the viewport, and always calls setMobileMenuOpen(false) after navigation. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "If any admin destination is referenced by the Header but missing in the route tree, wire the existing page component into the router under the intended path (without introducing new top-level pages beyond what the navigation requires)."
+          "description": "If needed, adjust existing global utility styles (without adding new global stylesheet entrypoints) to prevent mobile menu list items from clipping/overflowing (e.g., safe truncation/wrapping helpers) while preserving the current theme."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Resolve overlapping/clipping issues for header navigation, dropdowns, mobile menu, and admin pages across common breakpoints.",
+      "summary": "Ensure admin approval/edit/upload/approve/reject actions in approval-required admin rooms are wired, refresh UI state on completion, and clearly indicate when actions are unavailable due to missing backend support.",
       "acceptanceCriteria": [
-        "No visible UI elements overlap in Header navigation, Admin dropdown, or mobile menu on typical breakpoints (mobile, tablet, desktop).",
-        "Dropdown menus remain fully usable (scrollable when needed) without spilling outside the viewport.",
-        "Admin pages do not have sections where controls or text are clipped/hidden due to container overflow or z-index issues."
+        "In the approval-focused admin pages (e.g., AdminApprovalPage and any other admin room showing pending items), every displayed pending item type has working Approve and Reject actions for admins.",
+        "Approve/Reject actions result in a visible success/failure outcome in the UI and the affected lists refresh to reflect the new status/state.",
+        "No admin action silently no-ops due to missing backend methods; if an action is not supported, the UI must clearly indicate it is unavailable rather than failing silently.",
+        "Non-admin users cannot invoke approve/reject/upload/edit operations (backend enforces admin-only access where intended)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/Header.tsx",
+          "path": "frontend/src/hooks/useActorCapabilities.ts",
           "operation": "modify",
-          "description": "Adjust header/nav layout classes to prevent truncation/overlap (e.g., enforce min-w-0 where needed, improve wrapping/truncation on labels, ensure dropdown content has safe max-height + scroll, and ensure correct stacking context so menus render above page content)."
+          "description": "Expand capability detection to cover each moderation action used by admin approval-required rooms (per pending-item type: list + approve + reject, plus create/upload where applicable) so pages can reliably disable/hide actions and show an explicit “unavailable” message when a backend method is missing."
         },
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add/adjust global utilities for safe overflow handling and stacking contexts used by navigation and dropdowns (e.g., consistent z-index layers, overflow-x containment, and responsive typography/spacing to avoid clipping)."
+          "description": "Harden admin moderation mutations/queries to (1) consistently surface method-unavailable errors, (2) invalidate the correct react-query keys after approve/reject/upload/create so lists refresh, and (3) avoid silent returns for admin actions; ensure any blob/image upload flows continue to use ExternalBlob patterns appropriately. Verify the blob-storage component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/Layout.tsx",
+          "path": "frontend/src/pages/AdminApprovalPage.tsx",
           "operation": "modify",
-          "description": "Ensure the layout containers do not inadvertently clip overlays (dropdowns/modals) and that main content spacing works across breakpoints while maintaining the existing dark futuristic/theater look."
+          "description": "Use actor capability detection to ensure every rendered pending-item section has enabled Approve/Reject (and bulk actions where present) only when supported; otherwise render a clear in-UI “Action unavailable” state. Ensure successful actions visibly update state (invalidate/refetch) and errors are displayed (toast + inline as needed). Verify the shadcn-ui component usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminEditingRoomPage.tsx",
+          "operation": "modify",
+          "description": "Audit and update pending-item moderation controls so all displayed pending types have functioning approve/reject/delete/edit actions for admins, refresh lists after actions, and show a clear “unavailable” UI when required backend methods are absent (no silent no-ops). Verify the shadcn-ui component usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminImageLibraryPage.tsx",
+          "operation": "modify",
+          "description": "Ensure image upload + pending image approve/reject flows are consistently enabled for admins when supported, show upload progress/success/failure, and disable/label actions when backend support is missing. Verify the blob-storage component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminMediaUploadRoomPage.tsx",
+          "operation": "modify",
+          "description": "Ensure admin media upload/create flows are enabled where applicable, show clear success/failure feedback, and refresh lists after actions; if a media submit/approve/reject capability is missing, display it as unavailable rather than allowing a failing control. Verify the blob-storage component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminHiiYahChatPage.tsx",
+          "operation": "modify",
+          "description": "Ensure all displayed pending chat/broadcast/hero-join moderation items have functional approve/reject actions for admins, refresh the lists after actions, and render an explicit unavailable state if required backend methods are missing. Verify the shadcn-ui component usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Fix frontend build/runtime errors that block reliable rebuild and deployment, including missing assets and TypeScript/runtime exceptions.",
+      "summary": "Remove post-v44 regressions causing admin navigation/action runtime errors and ensure admin flows run without uncaught exceptions.",
       "acceptanceCriteria": [
-        "The project builds successfully (frontend + backend) with no TypeScript compile errors and no Motoko compile errors.",
-        "App loads without immediate runtime exceptions in the browser console for core navigation (home + at least one admin route as admin).",
-        "Backend canister deploy completes without trapping during initialization or during common calls like admin check.",
-        "Missing static assets referenced by CSS/routes do not cause broken rendering (images exist or references are corrected)."
+        "Frontend builds without TypeScript errors and runs without console errors when opening and using the Admin menu.",
+        "Backend canister builds without Motoko compilation errors.",
+        "Performing core admin actions (navigate to admin pages; upload where applicable; approve/reject pending items) does not produce uncaught runtime exceptions."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/components/AdminRouteGuard.tsx",
           "operation": "modify",
-          "description": "Resolve any TypeScript/runtime issues in query hooks that can break builds (including correcting imports/types for blob/image handling). If using the selected blob-storage component’s ExternalBlob type/class, verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Ensure background switching does not reference missing static assets and cannot throw during route changes; validate fallbacks are safe so the app always renders."
+          "description": "Prevent repeated side effects during render (e.g., move error toasts to an effect and ensure stable conditional rendering) so blocked navigation to /admin/* does not create repeated toasts or runtime warnings; keep non-admin and unauthenticated users blocked."
         },
         {
           "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Eliminate runtime navigation errors (e.g., incorrect navigate() usage, malformed params, or menu states causing rendering exceptions) that could prevent successful deployment or core navigation."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Include required 5D-style background image assets and keep route-based background switching working with readable contrast.",
-      "acceptanceCriteria": [
-        "The following files exist under frontend/public/assets/generated and load successfully at runtime: default-bg.dim_1920x1080.png, admin-bg.dim_1920x1080.png, finance-bg.dim_1920x1080.png, commerce-bg.dim_1920x1080.png, chat-bg.dim_1920x1080.png.",
-        "Route-based background switching in frontend/src/components/Layout.tsx displays: admin background on /admin/*; finance on /wallet and /credit-card; commerce on /mall; chat on /hiiyah-chat; default otherwise.",
-        "Text remains readable over the backgrounds (sufficient contrast maintained)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
-          "operation": "create",
-          "description": "Add the required static background asset at frontend/public/assets/generated/default-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
-        },
-        {
-          "path": "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
-          "operation": "create",
-          "description": "Add the required static background asset at frontend/public/assets/generated/admin-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
-        },
-        {
-          "path": "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
-          "operation": "create",
-          "description": "Add the required static background asset at frontend/public/assets/generated/finance-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
-        },
-        {
-          "path": "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
-          "operation": "create",
-          "description": "Add the required static background asset at frontend/public/assets/generated/commerce-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
-        },
-        {
-          "path": "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
-          "operation": "create",
-          "description": "Add the required static background asset at frontend/public/assets/generated/chat-bg.dim_1920x1080.png (ensure it is committed and served as a static file)."
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Confirm route-to-background mapping matches requirements (/admin/* => admin, /wallet & /credit-card => finance, /mall => commerce, /hiiyah-chat => chat, default otherwise) and ensure readable foreground contrast is preserved."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Wire the background CSS classes used by Layout (e.g., bg-default-area/bg-admin-area/bg-finance-area/bg-commerce-area/bg-chat-area) to the corresponding static files: frontend/public/assets/generated/default-bg.dim_1920x1080.png, admin-bg.dim_1920x1080.png, finance-bg.dim_1920x1080.png, commerce-bg.dim_1920x1080.png, chat-bg.dim_1920x1080.png, and add a consistent contrast overlay strategy for text readability."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Apply a consistent dark futuristic/theater theme across shared UI while implementing overlap fixes.",
-      "acceptanceCriteria": [
-        "Key shared UI surfaces (Header, Footer, page containers, admin pages) follow a consistent spacing and typography system.",
-        "No new conflicting color theme is introduced; changes remain consistent with the existing dark futuristic/theater look defined in global styles."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Refine global typography/spacing tokens and shared surface styling to stay coherent with the existing dark futuristic/theater theme (and to support the overlap/clipping fixes consistently across pages)."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "If needed to support consistent spacing/typography and responsive behavior, adjust Tailwind theme tokens (colors, font sizes, container/padding, and z-index scale) without introducing a conflicting new palette."
-        },
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Align header component styling (font sizes, padding, button sizing, truncation behavior) with the global theme updates to ensure consistent look and avoid overlap regressions."
+          "description": "Harden header admin/nav interactions to avoid uncaught errors (e.g., ensure all admin menu clicks navigate to valid routes, handle admin-loading states safely, and ensure mobile menu state transitions are consistent). Verify the shadcn-ui component usage instructions before implementing."
         }
       ]
     }

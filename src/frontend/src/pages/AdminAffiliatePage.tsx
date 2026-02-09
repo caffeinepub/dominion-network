@@ -5,12 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from '@tanstack/react-router';
-import { useGetAllAffiliateTiers, useCreateAffiliateTier } from '../hooks/useQueries';
+import { useGetAffiliateTiers, useCreateAffiliateTier } from '../hooks/useQueries';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export function AdminAffiliatePage() {
   const navigate = useNavigate();
-  const { data: tiers, isLoading } = useGetAllAffiliateTiers();
+  const { data: tiers, isLoading } = useGetAffiliateTiers();
   const createTier = useCreateAffiliateTier();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);

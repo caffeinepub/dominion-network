@@ -3,15 +3,15 @@ import { ArrowLeft, Copy, Share2, TrendingUp, Bitcoin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from '@tanstack/react-router';
-import { useGenerateReferralLink, useGetUserReferralLink, useGetAllAffiliateTiers } from '../hooks/useQueries';
+import { useGenerateReferralLink, useGetReferralLink, useGetAffiliateTiers } from '../hooks/useQueries';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
 export function AffiliateDashboardPage() {
   const navigate = useNavigate();
   const generateLink = useGenerateReferralLink();
-  const { data: existingLink } = useGetUserReferralLink();
-  const { data: tiers } = useGetAllAffiliateTiers();
+  const { data: existingLink } = useGetReferralLink();
+  const { data: tiers } = useGetAffiliateTiers();
   const [referralLink, setReferralLink] = useState<string | null>(null);
 
   useEffect(() => {
@@ -86,29 +86,31 @@ export function AffiliateDashboardPage() {
           <Card className="border-primary/20 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
+                <TrendingUp className="h-5 w-5 text-accent" />
                 Statistics
               </CardTitle>
               <CardDescription>Your referral performance</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {existingLink ? (
-                <>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Total Views</p>
-                    <p className="text-2xl font-bold">{existingLink.views.toString()}</p>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Views</span>
+                    <span className="font-bold">{existingLink.views.toString()}</span>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Total Clicks</p>
-                    <p className="text-2xl font-bold">{existingLink.clicks.toString()}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Clicks</span>
+                    <span className="font-bold">{existingLink.clicks.toString()}</span>
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Conversions</p>
-                    <p className="text-2xl font-bold text-green-500">{existingLink.conversions.toString()}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Conversions</span>
+                    <span className="font-bold text-primary">{existingLink.conversions.toString()}</span>
                   </div>
-                </>
+                </div>
               ) : (
-                <p className="text-muted-foreground text-center py-4">Generate a link to start tracking</p>
+                <p className="text-muted-foreground text-sm">
+                  Generate a referral link to start tracking
+                </p>
               )}
             </CardContent>
           </Card>
@@ -116,34 +118,65 @@ export function AffiliateDashboardPage() {
           <Card className="border-primary/20 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Bitcoin className="h-5 w-5 text-primary" />
-                Current Tier
+                <Bitcoin className="h-5 w-5 text-orange-500" />
+                Earnings
               </CardTitle>
-              <CardDescription>Your commission tier and earnings</CardDescription>
+              <CardDescription>Blockchain-verified commissions</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {currentTier ? (
-                <>
-                  <div className="space-y-2">
-                    <Badge variant="outline" className="text-lg px-3 py-1">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Current Tier</span>
+                    <Badge variant="outline" className="text-primary border-primary">
                       {currentTier.name}
                     </Badge>
-                    <p className="text-3xl font-bold text-primary">{currentTier.commissionRate.toString()}%</p>
-                    <p className="text-sm text-muted-foreground">Commission Rate</p>
                   </div>
-                  <div className="pt-4 border-t">
-                    <p className="text-xs text-muted-foreground mb-2">Blockchain-Verified Earnings</p>
-                    <p className="text-sm font-medium">Coming Soon</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Commission Rate</span>
+                    <span className="font-bold text-primary">{currentTier.commissionRate.toString()}%</span>
                   </div>
-                </>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    All earnings are tracked on the Bitcoin blockchain and require admin approval for payout.
+                  </p>
+                </div>
               ) : (
-                <p className="text-muted-foreground text-center py-4">
-                  Start referring to unlock commission tiers
+                <p className="text-muted-foreground text-sm">
+                  Complete referrals to unlock commission tiers
                 </p>
               )}
             </CardContent>
           </Card>
         </div>
+
+        {tiers && tiers.length > 0 && (
+          <Card className="border-primary/20 shadow-lg">
+            <CardHeader>
+              <CardTitle>Available Tiers</CardTitle>
+              <CardDescription>Unlock higher commission rates with more referrals</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tiers.map((tier) => (
+                  <div
+                    key={tier.id.toString()}
+                    className={`p-4 rounded-lg border ${
+                      currentTier?.id === tier.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-muted bg-muted'
+                    }`}
+                  >
+                    <h3 className="font-bold text-lg mb-2">{tier.name}</h3>
+                    <p className="text-2xl font-bold text-primary mb-2">{tier.commissionRate.toString()}%</p>
+                    <p className="text-sm text-muted-foreground">
+                      {tier.minReferrals.toString()} referrals required
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

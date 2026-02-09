@@ -1,141 +1,93 @@
 {
   "kind": "build_request",
-  "title": "Fix admin access, UI overlap, and deployment/build failures; ensure 5D background assets exist",
-  "priority": "normal",
+  "title": "Restore Admin menu (v44) and ensure admins can edit/upload/approve/reject across option rooms needing approval",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix admin authorization so that any authenticated user who has the admin role can access every route under \"/admin/*\" (including \"/admin/approvals\", \"/admin/invite-links\", and all other admin rooms), while non-admin users remain blocked from all \"/admin/*\" routes.",
-      "target": "both",
+      "text": "Restore the Admin menu/navigation to match the behavior and completeness of version 44: when an authenticated user is an admin, the Header must expose an Admin entry point that provides working navigation links to all admin rooms/pages currently routed under \"/admin/*\" (at minimum: approvals, editing room, media upload room, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, and chat administration).",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-4"
         ],
         "quotes": [
-          "1. Correct all admin access issues.\n2. Make admin is able to access all."
+          "Bring the admin menu back from version 44."
         ]
       },
       "acceptanceCriteria": [
-        "When logged in as an admin identity, navigating directly to each admin route defined in frontend/src/App.tsx renders the page content (not the access denied screen).",
-        "When logged in as a non-admin identity, navigating to any \"/admin/*\" route shows the access denied UI.",
-        "Backend exposes a stable admin-check method used by the frontend (e.g., the actor method checked by useIsCallerAdmin) and it returns correct values for admin vs non-admin callers.",
-        "No admin pages require additional non-admin approval gates beyond admin role checks."
+        "When logged in as an admin, an Admin menu is visible in the header and contains links to each of the listed admin routes.",
+        "Each Admin menu item navigates to an existing route defined in frontend/src/App.tsx and the page renders without runtime errors.",
+        "When not logged in or when logged in as a non-admin, the Admin menu is not shown and direct navigation to any \"/admin/*\" route is blocked by AdminRouteGuard."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Audit and fix the Admin menu and all admin navigation links so that every visible admin menu option routes to a real, working route and successfully loads for admins (no dead links, incorrect paths, or items navigating to the wrong page).",
+      "text": "Ensure the Admin menu is available and fully usable on mobile as well as desktop: the mobile navigation must include an Admin section (or equivalent entry point) exposing the same admin destinations as the desktop Admin dropdown, without clipping/overflow, and closing the mobile menu after navigation.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-4"
         ],
         "quotes": [
-          "2. Make admin is able to access all.",
-          "4. Correct all errors."
+          "Bring the admin menu back from version 44."
         ]
       },
       "acceptanceCriteria": [
-        "Every Admin dropdown option in frontend/src/components/Header.tsx navigates to a route that exists in frontend/src/App.tsx.",
-        "For an admin user, each Admin dropdown destination loads without runtime errors.",
-        "No duplicate or misleading menu items remain (each label corresponds to the page it opens)."
+        "On small screens, an admin user can access the same admin destinations from the mobile menu as from desktop.",
+        "Mobile menu/admin items do not overflow the viewport; long labels wrap or truncate appropriately.",
+        "After selecting an admin destination from the mobile menu, the app navigates correctly and the mobile menu closes."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Fix overlapping/clipping layout issues across the app (prioritize navigation, dropdown menus, mobile menu, and admin pages) so all labels and controls remain readable, wrap/truncate appropriately, and stay within the viewport on common screen sizes.",
-      "target": "frontend",
+      "text": "Provide admins full moderation capabilities for all option rooms requiring approval: across the admin rooms that manage pending items, admins must be able to upload/create items where applicable and must have functioning approve and reject actions for every pending item type shown in the UI.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-4"
         ],
         "quotes": [
-          "3. Correct all overlapping"
+          "Admin full access to edit, upload, approve and reject option rooms for all that need approval."
         ]
       },
       "acceptanceCriteria": [
-        "No visible UI elements overlap in Header navigation, Admin dropdown, or mobile menu on typical breakpoints (mobile, tablet, desktop).",
-        "Dropdown menus remain fully usable (scrollable when needed) without spilling outside the viewport.",
-        "Admin pages do not have sections where controls or text are clipped/hidden due to container overflow or z-index issues."
+        "In the approval-focused admin pages (e.g., AdminApprovalPage and any other admin room showing pending items), every displayed pending item type has working Approve and Reject actions for admins.",
+        "Approve/Reject actions result in a visible success/failure outcome in the UI and the affected lists refresh to reflect the new status/state.",
+        "No admin action silently no-ops due to missing backend methods; if an action is not supported, the UI must clearly indicate it is unavailable rather than failing silently.",
+        "Non-admin users cannot invoke approve/reject/upload/edit operations (backend enforces admin-only access where intended)."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Resolve all build/runtime errors that prevent successful build and deployment; ensure the app can be rebuilt and redeployed reliably without deployment/build failures.",
+      "text": "Eliminate regressions/errors introduced after version 44 related to the admin menu and admin room actions: the app must build and run cleanly, and admin navigation and moderation actions must not throw uncaught exceptions.",
       "target": "both",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-4"
         ],
         "quotes": [
-          "4. Correct all errors.",
-          "5. Fix all deployment issues.",
-          "Correct all issues and try again"
+          "Do this without any error as requested."
         ]
       },
       "acceptanceCriteria": [
-        "The project builds successfully (frontend + backend) with no TypeScript compile errors and no Motoko compile errors.",
-        "App loads without immediate runtime exceptions in the browser console for core navigation (home + at least one admin route as admin).",
-        "Backend canister deploy completes without trapping during initialization or during common calls like admin check.",
-        "Missing static assets referenced by CSS/routes do not cause broken rendering (images exist or references are corrected)."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Generate and include the required futuristic 5D-style background image set as static frontend assets, and ensure the existing route-based background switching in Layout continues to apply the correct background per major area with readable foreground contrast.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "project_state.json",
-          "recent-messages"
-        ],
-        "quotes": [
-          "add 5D-style background images per page."
-        ]
-      },
-      "acceptanceCriteria": [
-        "The following files exist under frontend/public/assets/generated and load successfully at runtime: default-bg.dim_1920x1080.png, admin-bg.dim_1920x1080.png, finance-bg.dim_1920x1080.png, commerce-bg.dim_1920x1080.png, chat-bg.dim_1920x1080.png.",
-        "Route-based background switching in frontend/src/components/Layout.tsx displays: admin background on /admin/*; finance on /wallet and /credit-card; commerce on /mall; chat on /hiiyah-chat; default otherwise.",
-        "Text remains readable over the backgrounds (sufficient contrast maintained)."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Apply a consistent, coherent visual theme across the app (typography, spacing, and component styling) aligned with the existing dark futuristic/theater styling, and enforce it consistently while addressing the overlap fixes.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "recent-messages"
-        ],
-        "quotes": [
-          "Correct all issues and try again"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Key shared UI surfaces (Header, Footer, page containers, admin pages) follow a consistent spacing and typography system.",
-        "No new conflicting color theme is introduced; changes remain consistent with the existing dark futuristic/theater look defined in global styles."
+        "Frontend builds without TypeScript errors and runs without console errors when opening and using the Admin menu.",
+        "Backend canister builds without Motoko compilation errors.",
+        "Performing core admin actions (navigate to admin pages; upload where applicable; approve/reject pending items) does not produce uncaught runtime exceptions."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; only add backend/migration.mo if state migration is required.",
-    "Do not edit any files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT (compose them instead).",
-    "All user-facing text must be in English.",
-    "Background images must be served as static assets from frontend/public/assets/generated; do not proxy image delivery through the backend."
+    "Do not modify files under frontend/immutablePaths (notably: frontend/src/hooks/useInternetIdentity.ts/tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui/*).",
+    "Backend must remain single-actor (all Motoko logic in backend/main.mo); only add/update backend/migration.mo if a stable-state schema change is required."
   ],
   "nonGoals": [
-    "Implementing new non-admin product features unrelated to admin access, overlap fixes, deployment reliability, or backgrounds.",
-    "Adding third-party authentication beyond Internet Identity.",
-    "Adding external databases, external backend services, or non-Motoko backends."
+    "Recreating unrelated UI/feature changes from version 44 outside the Admin menu and admin moderation capabilities.",
+    "Adding third-party authentication providers or any non-Internet-Identity auth.",
+    "Introducing external databases or additional backend services."
   ],
   "imageRequirements": {
-    "required": [
-      "Futuristic admin-control-room scene with strong depth, layered holographic panels, dark tech surfaces, neon accents, subtle circuit patterns (admin-bg.dim_1920x1080.png)",
-      "Futuristic finance scene with metallic gradients, holographic grid lines, floating UI widgets, and deep parallax lighting (finance-bg.dim_1920x1080.png)",
-      "Futuristic commerce/showroom scene with sci-fi lighting, geometric depth, reflective floor, and layered product-display silhouettes (commerce-bg.dim_1920x1080.png)",
-      "Futuristic communications scene with subtle digital waveforms, HUD elements, soft bokeh lights, and depth-stacked interface shapes (chat-bg.dim_1920x1080.png)",
-      "Futuristic general/landing scene with cinematic depth, abstract holographic shapes, and a dark high-contrast tech atmosphere (default-bg.dim_1920x1080.png)"
-    ],
+    "required": [],
     "edits": []
   },
   "userProfileUpdate": {

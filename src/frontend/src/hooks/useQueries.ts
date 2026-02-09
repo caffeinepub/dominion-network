@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { useInternetIdentity } from './useInternetIdentity';
 import type {
   MediaContent,
   Category,
@@ -35,33 +34,25 @@ const hasMethod = (actor: any, methodName: string): boolean => {
   return actor && typeof actor[methodName] === 'function';
 };
 
-// Admin Check Query - keyed by principal to prevent stale cache
+// Admin Check Query
 export function useIsCallerAdmin() {
   const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
-  const principalKey = identity?.getPrincipal().toString() || 'anonymous';
 
   const query = useQuery<boolean>({
-    queryKey: ['isCallerAdmin', principalKey],
+    queryKey: ['isCallerAdmin'],
     queryFn: async () => {
       if (!actor || !hasMethod(actor, 'isCallerAdmin')) return false;
-      try {
-        return await actor.isCallerAdmin();
-      } catch (error) {
-        console.error('Admin check error:', error);
-        return false;
-      }
+      return actor.isCallerAdmin();
     },
-    enabled: !!actor && !actorFetching && !!identity,
-    retry: 1,
-    staleTime: 1000 * 60 * 5,
+    enabled: !!actor && !actorFetching,
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   return {
     ...query,
     isLoading: actorFetching || query.isLoading,
-    isFetched: !!actor && !!identity && query.isFetched,
+    isFetched: !!actor && query.isFetched,
   };
 }
 
@@ -199,6 +190,75 @@ export function useEraseAllImages() {
   });
 }
 
+// Magic Link Admin Invitation Queries
+export function useCreateMagicLinkInvitation() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { email: string; token: string; expiresAt: bigint }) => {
+      if (!actor || !hasMethod(actor, 'createMagicLinkInvitation')) {
+        toast.error('Magic link creation not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).createMagicLinkInvitation(params.email, params.token, params.expiresAt);
+    },
+    onSuccess: () => {
+      toast.success('Magic link invitation created');
+      queryClient.invalidateQueries({ queryKey: ['magicLinks'] });
+    },
+    onError: () => {
+      toast.error('Failed to create magic link invitation');
+    },
+  });
+}
+
+export function useListMagicLinkInvitations() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<MagicLinkInvitation[]>({
+    queryKey: ['magicLinks'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'listMagicLinkInvitations')) return [];
+      return (actor as any).listMagicLinkInvitations();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// User Status Management Queries
+export function useUpdateUserOnlineStatus() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (isOnline: boolean) => {
+      if (!actor || !hasMethod(actor, 'updateUserOnlineStatus')) {
+        throw new Error('Method not available');
+      }
+      return (actor as any).updateUserOnlineStatus(isOnline);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['onlineUsers'] });
+    },
+  });
+}
+
+export function useListOnlineUsers() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Array<[any, boolean]>>({
+    queryKey: ['onlineUsers'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'listOnlineUsers')) return [];
+      return (actor as any).listOnlineUsers();
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+}
+
 // Content Queries
 export function useGetAllContent() {
   const { actor, isFetching } = useActor();
@@ -256,7 +316,6 @@ export function useUpdateViews() {
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   const query = useQuery<any>({
     queryKey: ['currentUserProfile'],
@@ -264,7 +323,7 @@ export function useGetCallerUserProfile() {
       if (!actor || !hasMethod(actor, 'getCallerUserProfile')) return null;
       return (actor as any).getCallerUserProfile();
     },
-    enabled: !!actor && !actorFetching && !!identity,
+    enabled: !!actor && !actorFetching,
     retry: false,
   });
 
@@ -337,26 +396,23 @@ export function useDeleteContent() {
   });
 }
 
-// Category Queries
-export function useDeleteCategory() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
+export function useGetUserRole() {
+  const { actor, isFetching } = useActor();
 
-  return useMutation({
-    mutationFn: async (categoryId: bigint) => {
-      if (!actor || !hasMethod(actor, 'deleteCategory')) {
-        toast.info('Category deletion coming soon');
-        throw new Error('Method not available');
+  return useQuery<string>({
+    queryKey: ['userRole'],
+    queryFn: async () => {
+      if (!actor) return 'guest';
+      if (hasMethod(actor, 'getCallerUserRole')) {
+        return actor.getCallerUserRole();
       }
-      return (actor as any).deleteCategory(categoryId);
+      if (hasMethod(actor, 'getUserRole')) {
+        const role = await (actor as any).getUserRole();
+        return role;
+      }
+      return 'guest';
     },
-    onSuccess: () => {
-      toast.success('Category deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-    },
-    onError: () => {
-      toast.error('Failed to delete category');
-    },
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -447,6 +503,29 @@ export function useDeleteDisplayContent() {
     },
     onError: () => {
       toast.error('Failed to delete display content');
+    },
+  });
+}
+
+// Category Queries
+export function useDeleteCategory() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (categoryId: bigint) => {
+      if (!actor || !hasMethod(actor, 'deleteCategory')) {
+        toast.error('Category deletion not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).deleteCategory(categoryId);
+    },
+    onSuccess: () => {
+      toast.success('Category deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+    onError: () => {
+      toast.error('Failed to delete category');
     },
   });
 }
@@ -577,6 +656,7 @@ export function useUpdateAdvertisement() {
       targetUrl: string;
       placement: AdPlacement;
       adType: AdType;
+      active: boolean;
     }) => {
       if (!actor || !hasMethod(actor, 'updateAdvertisement')) {
         toast.error('Advertisement update not available');
@@ -589,7 +669,8 @@ export function useUpdateAdvertisement() {
         params.imageUrl,
         params.targetUrl,
         params.placement,
-        params.adType
+        params.adType,
+        params.active
       );
     },
     onSuccess: () => {
@@ -598,28 +679,6 @@ export function useUpdateAdvertisement() {
     },
     onError: () => {
       toast.error('Failed to update advertisement');
-    },
-  });
-}
-
-export function useToggleAdvertisementActive() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      if (!actor || !hasMethod(actor, 'toggleAdvertisementActive')) {
-        toast.error('Advertisement toggle not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).toggleAdvertisementActive(id);
-    },
-    onSuccess: () => {
-      toast.success('Advertisement status updated');
-      queryClient.invalidateQueries({ queryKey: ['advertisements'] });
-    },
-    onError: () => {
-      toast.error('Failed to update advertisement status');
     },
   });
 }
@@ -650,9 +709,9 @@ export function useTrackAdView() {
   const { actor } = useActor();
 
   return useMutation({
-    mutationFn: async (id: bigint) => {
+    mutationFn: async (adId: bigint) => {
       if (!actor || !hasMethod(actor, 'trackAdView')) return;
-      return (actor as any).trackAdView(id);
+      return (actor as any).trackAdView(adId);
     },
   });
 }
@@ -661,22 +720,22 @@ export function useTrackAdClick() {
   const { actor } = useActor();
 
   return useMutation({
-    mutationFn: async (id: bigint) => {
+    mutationFn: async (adId: bigint) => {
       if (!actor || !hasMethod(actor, 'trackAdClick')) return;
-      return (actor as any).trackAdClick(id);
+      return (actor as any).trackAdClick(adId);
     },
   });
 }
 
 // Affiliate Queries
-export function useGetAllAffiliateTiers() {
+export function useGetAffiliateTiers() {
   const { actor, isFetching } = useActor();
 
   return useQuery<AffiliateTier[]>({
     queryKey: ['affiliateTiers'],
     queryFn: async () => {
-      if (!actor || !hasMethod(actor, 'getAllAffiliateTiers')) return [];
-      return (actor as any).getAllAffiliateTiers();
+      if (!actor || !hasMethod(actor, 'getAffiliateTiers')) return [];
+      return (actor as any).getAffiliateTiers();
     },
     enabled: !!actor && !isFetching,
   });
@@ -717,12 +776,12 @@ export function useDeleteAffiliateTier() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: bigint) => {
+    mutationFn: async (tierId: bigint) => {
       if (!actor || !hasMethod(actor, 'deleteAffiliateTier')) {
-        toast.info('Affiliate tier deletion coming soon');
+        toast.error('Affiliate tier deletion not available');
         throw new Error('Method not available');
       }
-      return (actor as any).deleteAffiliateTier(id);
+      return (actor as any).deleteAffiliateTier(tierId);
     },
     onSuccess: () => {
       toast.success('Affiliate tier deleted successfully');
@@ -731,19 +790,6 @@ export function useDeleteAffiliateTier() {
     onError: () => {
       toast.error('Failed to delete affiliate tier');
     },
-  });
-}
-
-export function useGetUserReferralLink() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<ReferralLink | null>({
-    queryKey: ['referralLink'],
-    queryFn: async () => {
-      if (!actor || !hasMethod(actor, 'getUserReferralLink')) return null;
-      return (actor as any).getUserReferralLink();
-    },
-    enabled: !!actor && !isFetching,
   });
 }
 
@@ -769,128 +815,31 @@ export function useGenerateReferralLink() {
   });
 }
 
-// Terms and Conditions Queries
-export function useGetActiveTerms() {
+export function useGetReferralLink() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<TermsAndConditions | null>({
-    queryKey: ['terms', 'active'],
+  return useQuery<ReferralLink | null>({
+    queryKey: ['referralLink'],
     queryFn: async () => {
-      if (!actor || !hasMethod(actor, 'getActiveTerms')) return null;
-      return (actor as any).getActiveTerms();
+      if (!actor || !hasMethod(actor, 'getReferralLink')) return null;
+      return (actor as any).getReferralLink();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetActiveTermsAndConditions() {
-  return useGetActiveTerms();
-}
-
-export function useCreateTerms() {
+export function useTrackReferralClick() {
   const { actor } = useActor();
-  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      title: string;
-      content: string;
-      version: string;
-    }) => {
-      if (!actor || !hasMethod(actor, 'createTerms')) {
-        toast.error('Terms creation not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).createTerms(params.title, params.content, params.version);
-    },
-    onSuccess: () => {
-      toast.success('Terms created successfully');
-      queryClient.invalidateQueries({ queryKey: ['terms'] });
-    },
-    onError: () => {
-      toast.error('Failed to create terms');
+    mutationFn: async (code: string) => {
+      if (!actor || !hasMethod(actor, 'trackReferralClick')) return;
+      return (actor as any).trackReferralClick(code);
     },
   });
 }
 
-export function useCreateTermsAndConditions() {
-  return useCreateTerms();
-}
-
-export function useUpdateTermsAndConditions() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      id: bigint;
-      title: string;
-      content: string;
-      version: string;
-    }) => {
-      if (!actor || !hasMethod(actor, 'updateTerms')) {
-        toast.info('Terms update coming soon');
-        throw new Error('Method not available');
-      }
-      return (actor as any).updateTerms(params.id, params.title, params.content, params.version);
-    },
-    onSuccess: () => {
-      toast.success('Terms updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['terms'] });
-    },
-    onError: () => {
-      toast.error('Failed to update terms');
-    },
-  });
-}
-
-// Chat Queries
-export function useSendChatMessage() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      roomId: bigint;
-      content: string;
-      messageType: MessageType;
-      fileBlob?: any;
-    }) => {
-      if (!actor || !hasMethod(actor, 'sendChatMessage')) {
-        toast.error('Chat message sending not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).sendChatMessage(
-        params.roomId,
-        params.content,
-        params.messageType,
-        params.fileBlob ? [params.fileBlob] : []
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chatMessages'] });
-    },
-    onError: () => {
-      toast.error('Failed to send message');
-    },
-  });
-}
-
-export function useGetChatMessages(roomId: bigint) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<ChatMessage[]>({
-    queryKey: ['chatMessages', roomId.toString()],
-    queryFn: async () => {
-      if (!actor || !hasMethod(actor, 'getChatMessages')) return [];
-      return (actor as any).getChatMessages(roomId);
-    },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 5000,
-  });
-}
-
-// Pending Approval Queries
+// Approval Queries
 export function useGetPendingContentSubmissions() {
   const { actor, isFetching } = useActor();
 
@@ -904,48 +853,68 @@ export function useGetPendingContentSubmissions() {
   });
 }
 
-export function useApprovePendingContent() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
+export function useGetPendingMemberRegistrations() {
+  const { actor, isFetching } = useActor();
 
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      if (!actor || !hasMethod(actor, 'approvePendingContent')) {
-        toast.error('Content approval not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).approvePendingContent(id);
+  return useQuery<PendingMemberRegistration[]>({
+    queryKey: ['pending', 'members'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getPendingMemberRegistrations')) return [];
+      return (actor as any).getPendingMemberRegistrations();
     },
-    onSuccess: () => {
-      toast.success('Content approved');
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-      queryClient.invalidateQueries({ queryKey: ['content'] });
-    },
-    onError: () => {
-      toast.error('Failed to approve content');
-    },
+    enabled: !!actor && !isFetching,
   });
 }
 
-export function useRejectPendingContent() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
+export function useGetPendingAdminRequests() {
+  const { actor, isFetching } = useActor();
 
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      if (!actor || !hasMethod(actor, 'rejectPendingContent')) {
-        toast.error('Content rejection not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).rejectPendingContent(id);
+  return useQuery<PendingAdminRequest[]>({
+    queryKey: ['pending', 'admins'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getPendingAdminRequests')) return [];
+      return (actor as any).getPendingAdminRequests();
     },
-    onSuccess: () => {
-      toast.success('Content rejected');
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetPendingCardLoads() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<PendingCardLoad[]>({
+    queryKey: ['pending', 'cardLoads'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getPendingCardLoads')) return [];
+      return (actor as any).getPendingCardLoads();
     },
-    onError: () => {
-      toast.error('Failed to reject content');
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetPendingPriceUpdates() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<PendingPriceUpdate[]>({
+    queryKey: ['pending', 'priceUpdates'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getPendingPriceUpdates')) return [];
+      return (actor as any).getPendingPriceUpdates();
     },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetPendingAffiliatePayouts() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<PendingAffiliatePayout[]>({
+    queryKey: ['pending', 'payouts'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getPendingAffiliatePayouts')) return [];
+      return (actor as any).getPendingAffiliatePayouts();
+    },
+    enabled: !!actor && !isFetching,
   });
 }
 
@@ -962,50 +931,6 @@ export function useGetPendingBroadcastRequests() {
   });
 }
 
-export function useApproveBroadcastRequest() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      if (!actor || !hasMethod(actor, 'approveBroadcastRequest')) {
-        toast.error('Broadcast approval not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).approveBroadcastRequest(id);
-    },
-    onSuccess: () => {
-      toast.success('Broadcast request approved');
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-    onError: () => {
-      toast.error('Failed to approve broadcast request');
-    },
-  });
-}
-
-export function useRejectBroadcastRequest() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      if (!actor || !hasMethod(actor, 'rejectBroadcastRequest')) {
-        toast.error('Broadcast rejection not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).rejectBroadcastRequest(id);
-    },
-    onSuccess: () => {
-      toast.success('Broadcast request rejected');
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-    onError: () => {
-      toast.error('Failed to reject broadcast request');
-    },
-  });
-}
-
 export function useGetPendingHeroJoinRequests() {
   const { actor, isFetching } = useActor();
 
@@ -1019,24 +944,350 @@ export function useGetPendingHeroJoinRequests() {
   });
 }
 
+export function useRequestMemberRegistration() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (params: { name: string; email: string }) => {
+      if (!actor || !hasMethod(actor, 'requestMemberRegistration')) {
+        toast.info('Registration request coming soon');
+        throw new Error('Method not available');
+      }
+      return (actor as any).requestMemberRegistration(params.name, params.email);
+    },
+    onSuccess: () => {
+      toast.success('Registration request submitted');
+    },
+  });
+}
+
+// Approval Actions
+export function useApproveContentSubmission() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'approveContentSubmission')) {
+        toast.error('Approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approveContentSubmission(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Content approved');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve content');
+    },
+  });
+}
+
+export function useRejectContentSubmission() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'rejectContentSubmission')) {
+        toast.error('Rejection not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).rejectContentSubmission(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Content rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to reject content');
+    },
+  });
+}
+
+export function useApproveMemberRegistration() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'approveMemberRegistration')) {
+        toast.error('Approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approveMemberRegistration(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Member approved');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve member');
+    },
+  });
+}
+
+export function useRejectMemberRegistration() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'rejectMemberRegistration')) {
+        toast.error('Rejection not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).rejectMemberRegistration(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Member rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to reject member');
+    },
+  });
+}
+
+export function useApproveAdminRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'approveAdminRequest')) {
+        toast.error('Approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approveAdminRequest(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Admin approved');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve admin');
+    },
+  });
+}
+
+export function useRejectAdminRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'rejectAdminRequest')) {
+        toast.error('Rejection not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).rejectAdminRequest(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Admin rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to reject admin');
+    },
+  });
+}
+
+export function useApproveCardLoad() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'approveCardLoad')) {
+        toast.error('Approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approveCardLoad(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Card load approved');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve card load');
+    },
+  });
+}
+
+export function useRejectCardLoad() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'rejectCardLoad')) {
+        toast.error('Rejection not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).rejectCardLoad(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Card load rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to reject card load');
+    },
+  });
+}
+
+export function useApprovePriceUpdate() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'approvePriceUpdate')) {
+        toast.error('Approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approvePriceUpdate(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Price update approved');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve price update');
+    },
+  });
+}
+
+export function useRejectPriceUpdate() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'rejectPriceUpdate')) {
+        toast.error('Rejection not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).rejectPriceUpdate(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Price update rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to reject price update');
+    },
+  });
+}
+
+export function useApproveAffiliatePayout() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'approveAffiliatePayout')) {
+        toast.error('Approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approveAffiliatePayout(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Payout approved');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve payout');
+    },
+  });
+}
+
+export function useRejectAffiliatePayout() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (pendingId: bigint) => {
+      if (!actor || !hasMethod(actor, 'rejectAffiliatePayout')) {
+        toast.error('Rejection not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).rejectAffiliatePayout(pendingId);
+    },
+    onSuccess: () => {
+      toast.success('Payout rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to reject payout');
+    },
+  });
+}
+
+export function useApproveBroadcastRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (requestId: bigint) => {
+      if (!actor || !hasMethod(actor, 'approveBroadcastRequest')) {
+        toast.error('Approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approveBroadcastRequest(requestId);
+    },
+    onSuccess: () => {
+      toast.success('Broadcast approved');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve broadcast');
+    },
+  });
+}
+
+export function useRejectBroadcastRequest() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (requestId: bigint) => {
+      if (!actor || !hasMethod(actor, 'rejectBroadcastRequest')) {
+        toast.error('Rejection not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).rejectBroadcastRequest(requestId);
+    },
+    onSuccess: () => {
+      toast.success('Broadcast rejected');
+      queryClient.invalidateQueries({ queryKey: ['pending'] });
+    },
+    onError: () => {
+      toast.error('Failed to reject broadcast');
+    },
+  });
+}
+
 export function useApproveHeroJoinRequest() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: bigint) => {
+    mutationFn: async (requestId: bigint) => {
       if (!actor || !hasMethod(actor, 'approveHeroJoinRequest')) {
-        toast.error('Hero join approval not available');
+        toast.error('Approval not available');
         throw new Error('Method not available');
       }
-      return (actor as any).approveHeroJoinRequest(id);
+      return (actor as any).approveHeroJoinRequest(requestId);
     },
     onSuccess: () => {
-      toast.success('Hero join request approved');
+      toast.success('Hero join approved');
       queryClient.invalidateQueries({ queryKey: ['pending'] });
     },
     onError: () => {
-      toast.error('Failed to approve hero join request');
+      toast.error('Failed to approve hero join');
     },
   });
 }
@@ -1046,235 +1297,178 @@ export function useRejectHeroJoinRequest() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: bigint) => {
+    mutationFn: async (requestId: bigint) => {
       if (!actor || !hasMethod(actor, 'rejectHeroJoinRequest')) {
-        toast.error('Hero join rejection not available');
+        toast.error('Rejection not available');
         throw new Error('Method not available');
       }
-      return (actor as any).rejectHeroJoinRequest(id);
+      return (actor as any).rejectHeroJoinRequest(requestId);
     },
     onSuccess: () => {
-      toast.success('Hero join request rejected');
+      toast.success('Hero join rejected');
       queryClient.invalidateQueries({ queryKey: ['pending'] });
     },
     onError: () => {
-      toast.error('Failed to reject hero join request');
-    },
-  });
-}
-
-// User Profile Management
-export function useSaveCallerUserProfile() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (profile: any) => {
-      if (!actor || !hasMethod(actor, 'saveCallerUserProfile')) {
-        toast.error('Profile save not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).saveCallerUserProfile(profile);
-    },
-    onSuccess: () => {
-      toast.success('Profile saved successfully');
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
-    },
-    onError: () => {
-      toast.error('Failed to save profile');
-    },
-  });
-}
-
-// Stub hooks for missing backend functionality
-export function useGetPendingMemberRegistrations() {
-  return useQuery<PendingMemberRegistration[]>({
-    queryKey: ['pending', 'members'],
-    queryFn: async () => [],
-    enabled: false,
-  });
-}
-
-export function useGetPendingAdminRequests() {
-  return useQuery<PendingAdminRequest[]>({
-    queryKey: ['pending', 'admins'],
-    queryFn: async () => [],
-    enabled: false,
-  });
-}
-
-export function useGetPendingCardLoads() {
-  return useQuery<PendingCardLoad[]>({
-    queryKey: ['pending', 'cardLoads'],
-    queryFn: async () => [],
-    enabled: false,
-  });
-}
-
-export function useGetPendingPriceUpdates() {
-  return useQuery<PendingPriceUpdate[]>({
-    queryKey: ['pending', 'priceUpdates'],
-    queryFn: async () => [],
-    enabled: false,
-  });
-}
-
-export function useGetPendingAffiliatePayouts() {
-  return useQuery<PendingAffiliatePayout[]>({
-    queryKey: ['pending', 'payouts'],
-    queryFn: async () => [],
-    enabled: false,
-  });
-}
-
-export function useApproveContentSubmission() {
-  return useApprovePendingContent();
-}
-
-export function useRejectContentSubmission() {
-  return useRejectPendingContent();
-}
-
-export function useApproveMemberRegistration() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Member registration approval coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useRejectMemberRegistration() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Member registration rejection coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useApproveAdminRequest() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Admin request approval coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useRejectAdminRequest() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Admin request rejection coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useApproveCardLoad() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Card load approval coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useRejectCardLoad() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Card load rejection coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useApprovePriceUpdate() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Price update approval coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useRejectPriceUpdate() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Price update rejection coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useApproveAffiliatePayout() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Affiliate payout approval coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
-    },
-  });
-}
-
-export function useRejectAffiliatePayout() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: bigint) => {
-      toast.info('Affiliate payout rejection coming soon');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending'] });
+      toast.error('Failed to reject hero join');
     },
   });
 }
 
 export function useApproveAllPendingItems() {
+  const { actor } = useActor();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async () => {
-      toast.info('Bulk approval coming soon');
+      if (!actor || !hasMethod(actor, 'approveAllPendingItems')) {
+        toast.error('Bulk approval not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).approveAllPendingItems();
     },
     onSuccess: () => {
+      toast.success('All pending items approved');
       queryClient.invalidateQueries({ queryKey: ['pending'] });
+      queryClient.invalidateQueries({ queryKey: ['imageLibrary'] });
+    },
+    onError: () => {
+      toast.error('Failed to approve all items');
     },
   });
 }
 
-export function useRequestMemberRegistration() {
+// Terms and Conditions Queries
+export function useGetActiveTermsAndConditions() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<TermsAndConditions | null>({
+    queryKey: ['terms', 'active'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getActiveTermsAndConditions')) return null;
+      return (actor as any).getActiveTermsAndConditions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetTermsAndConditionsVersions() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<TermsAndConditions[]>({
+    queryKey: ['terms', 'versions'],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getTermsAndConditionsVersions')) return [];
+      return (actor as any).getTermsAndConditionsVersions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateTermsAndConditions() {
+  const { actor } = useActor();
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (params: { name: string; email: string; password: string }) => {
-      toast.info('Member registration coming soon');
+    mutationFn: async (params: {
+      title: string;
+      content: string;
+      version: string;
+      isActive: boolean;
+    }) => {
+      if (!actor || !hasMethod(actor, 'createTermsAndConditions')) {
+        toast.error('Terms creation not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).createTermsAndConditions(
+        params.title,
+        params.content,
+        params.version,
+        params.isActive
+      );
     },
     onSuccess: () => {
-      toast.success('Registration request submitted');
+      toast.success('Terms and Conditions created');
+      queryClient.invalidateQueries({ queryKey: ['terms'] });
+    },
+    onError: () => {
+      toast.error('Failed to create Terms and Conditions');
+    },
+  });
+}
+
+export function useUpdateTermsAndConditions() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      id: bigint;
+      title: string;
+      content: string;
+      version: string;
+      isActive: boolean;
+    }) => {
+      if (!actor || !hasMethod(actor, 'updateTermsAndConditions')) {
+        toast.error('Terms update not available');
+        throw new Error('Method not available');
+      }
+      return (actor as any).updateTermsAndConditions(
+        params.id,
+        params.title,
+        params.content,
+        params.version,
+        params.isActive
+      );
+    },
+    onSuccess: () => {
+      toast.success('Terms and Conditions updated');
+      queryClient.invalidateQueries({ queryKey: ['terms'] });
+    },
+    onError: () => {
+      toast.error('Failed to update Terms and Conditions');
+    },
+  });
+}
+
+// Chat Queries
+export function useGetChatMessages(roomId: bigint) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<ChatMessage[]>({
+    queryKey: ['chatMessages', roomId.toString()],
+    queryFn: async () => {
+      if (!actor || !hasMethod(actor, 'getChatMessages')) return [];
+      return (actor as any).getChatMessages(roomId);
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 5000,
+  });
+}
+
+export function useSendChatMessage() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      roomId: bigint;
+      content: string;
+      messageType: MessageType;
+      fileBlob?: any;
+    }) => {
+      if (!actor || !hasMethod(actor, 'sendChatMessage')) {
+        toast.info('Chat messaging coming soon');
+        throw new Error('Method not available');
+      }
+      return (actor as any).sendChatMessage(
+        params.roomId,
+        params.content,
+        params.messageType,
+        params.fileBlob
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', variables.roomId.toString()] });
     },
   });
 }

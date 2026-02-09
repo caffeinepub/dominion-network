@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Save, DollarSign, FileText, AlertCircle } from 'lucide-react';
@@ -26,6 +27,7 @@ export function AdminPricingTermsPage() {
     title: '',
     content: '',
     version: '',
+    isActive: true,
   });
 
   const [pricingData, setPricingData] = useState({
@@ -55,6 +57,7 @@ export function AdminPricingTermsPage() {
         title: activeTerms.title,
         content: activeTerms.content,
         version: activeTerms.version,
+        isActive: activeTerms.isActive,
       });
     }
   };
@@ -67,12 +70,14 @@ export function AdminPricingTermsPage() {
           title: termsData.title,
           content: termsData.content,
           version: termsData.version,
+          isActive: termsData.isActive,
         });
       } else {
         await createTerms.mutateAsync({
           title: termsData.title,
           content: termsData.content,
           version: termsData.version,
+          isActive: termsData.isActive,
         });
       }
     } catch (error) {
@@ -159,6 +164,20 @@ export function AdminPricingTermsPage() {
                 <p className="text-xs text-muted-foreground">
                   You can use HTML formatting for better presentation
                 </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="active">Active Status</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Make this version visible to users
+                  </p>
+                </div>
+                <Switch
+                  id="active"
+                  checked={termsData.isActive}
+                  onCheckedChange={(checked) => setTermsData({ ...termsData, isActive: checked })}
+                />
               </div>
 
               <div className="flex gap-3">

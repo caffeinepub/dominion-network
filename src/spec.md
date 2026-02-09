@@ -1,14 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Fix admin access control and admin navigation issues, resolve UI overlap/clipping, eliminate build/deploy failures, and ensure required 5D-style background assets load correctly with readable contrast.
+**Goal:** Restore the v44-style Admin menu and ensure admins can reliably navigate to all existing `/admin/*` pages and perform edit/upload/approve/reject actions across admin approval workflows without errors.
 
 **Planned changes:**
-- Fix admin authorization so all `/admin/*` routes are accessible to authenticated admin-role users and blocked for non-admin users, using a stable backend admin-check consumed by the frontend.
-- Audit and correct the Admin menu/dropdown links so each item routes to an existing `/admin/*` page and loads correctly for admins (remove/rename any misleading or duplicate items).
-- Address overlapping/clipping layout problems in navigation, dropdowns, mobile menu, and admin pages (wrapping/truncation, viewport-safe dropdown behavior, overflow/z-index fixes).
-- Resolve build/runtime/deployment errors across frontend and backend so builds compile cleanly and the app runs without immediate console/runtime exceptions in core flows.
-- Ensure the required route-based background switching remains correct and that the specified 5D background images exist as static assets and render with sufficient foreground contrast.
-- Apply consistent typography/spacing/component styling across shared UI surfaces while keeping the existing dark futuristic/theater theme.
+- Restore the Header Admin entry point for authenticated admins, with working links to all existing admin routes under `/admin/*` (including approvals, editing, media upload, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, and chat administration).
+- Ensure the Admin navigation is fully usable on mobile (same destinations as desktop, no overflow/clipping, and mobile menu closes after navigation).
+- Fix/complete admin moderation capabilities in approval-oriented admin rooms so each pending item type shown has functioning approve/reject (and upload/create/edit where applicable), with clear UI feedback and list refreshes.
+- Address regressions since v44 so admin navigation and core admin actions do not throw runtime exceptions and the app builds cleanly (frontend TypeScript and backend Motoko).
 
-**User-visible outcome:** Admin users can access and navigate all admin pages without access-denied errors; non-admin users remain blocked from admin routes; the UI no longer overlaps/clips on common screen sizes; builds/deployments succeed reliably; and each major area shows the correct futuristic background with readable text.
+**User-visible outcome:** Admin users see an Admin menu (desktop and mobile) that navigates to all admin pages, and can upload/create/edit and approve/reject pending items across admin approval rooms with clear success/failure feedback and no uncaught errors; non-admin users do not see the menu and cannot access `/admin/*` pages.

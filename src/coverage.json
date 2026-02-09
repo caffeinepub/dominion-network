@@ -1,36 +1,35 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-08T13:06:49.367Z",
+  "generatedAt": "2026-02-09T12:56:41.749Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 6,
-    "implemented": 6,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix admin authorization so that any authenticated user who has the admin role can access every route under \"/admin/*\" (including \"/admin/approvals\", \"/admin/invite-links\", and all other admin rooms), while non-admin users remain blocked from all \"/admin/*\" routes.",
+        "summary": "Restore the Admin menu/navigation to match the behavior and completeness of version 44: when an authenticated user is an admin, the Header must expose an Admin entry point that provides working navigation links to all admin rooms/pages currently routed under \"/admin/*\" (at minimum: approvals, editing room, media upload room, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, and chat administration).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/AdminRouteGuard.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/constants/adminNav.ts",
+          "frontend/src/components/Header.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/AdminRouteGuard.tsx"
+          "frontend/src/constants/adminNav.ts",
+          "frontend/src/components/Header.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Audit and fix the Admin menu and all admin navigation links so that every visible admin menu option routes to a real, working route and successfully loads for admins (no dead links, incorrect paths, or items navigating to the wrong page).",
+        "summary": "Ensure the Admin menu is available and fully usable on mobile as well as desktop: the mobile navigation must include an Admin section (or equivalent entry point) exposing the same admin destinations as the desktop Admin dropdown, without clipping/overflow, and closing the mobile menu after navigation.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/components/Header.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/index.css"
         ],
         "matchedFiles": [
           "frontend/src/components/Header.tsx"
@@ -38,66 +37,31 @@
       },
       {
         "id": "REQ-3",
-        "summary": "Fix overlapping/clipping layout issues across the app (prioritize navigation, dropdown menus, mobile menu, and admin pages) so all labels and controls remain readable, wrap/truncate appropriately, and stay within the viewport on common screen sizes.",
+        "summary": "Provide admins full moderation capabilities for all option rooms requiring approval: across the admin rooms that manage pending items, admins must be able to upload/create items where applicable and must have functioning approve and reject actions for every pending item type shown in the UI.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/Header.tsx",
-          "frontend/src/index.css",
-          "frontend/src/components/Layout.tsx"
+          "frontend/src/hooks/useActorCapabilities.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminApprovalPage.tsx",
+          "frontend/src/pages/AdminEditingRoomPage.tsx",
+          "frontend/src/pages/AdminImageLibraryPage.tsx",
+          "frontend/src/pages/AdminMediaUploadRoomPage.tsx",
+          "frontend/src/pages/AdminHiiYahChatPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/Header.tsx",
-          "frontend/src/index.css"
+          "frontend/src/hooks/useActorCapabilities.ts"
         ]
       },
       {
         "id": "REQ-4",
-        "summary": "Resolve all build/runtime errors that prevent successful build and deployment; ensure the app can be rebuilt and redeployed reliably without deployment/build failures.",
+        "summary": "Eliminate regressions/errors introduced after version 44 related to the admin menu and admin room actions: the app must build and run cleanly, and admin navigation and moderation actions must not throw uncaught exceptions.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/Layout.tsx",
+          "frontend/src/components/AdminRouteGuard.tsx",
           "frontend/src/components/Header.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/Header.tsx"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Generate and include the required futuristic 5D-style background image set as static frontend assets, and ensure the existing route-based background switching in Layout continues to apply the correct background per major area with readable foreground contrast.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/index.css"
-        ],
-        "matchedFiles": [
-          "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
-          "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
-          "frontend/src/index.css"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Apply a consistent, coherent visual theme across the app (typography, spacing, and component styling) aligned with the existing dark futuristic/theater styling, and enforce it consistently while addressing the overlap fixes.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/components/Header.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
+          "frontend/src/components/AdminRouteGuard.tsx",
           "frontend/src/components/Header.tsx"
         ]
       }
@@ -109,22 +73,10 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/public/assets/generated/admin-bg.dim_1920x1080.png",
-    "frontend/public/assets/generated/chat-bg.dim_1920x1080.png",
-    "frontend/public/assets/generated/commerce-bg.dim_1920x1080.png",
-    "frontend/public/assets/generated/default-bg.dim_1920x1080.png",
-    "frontend/public/assets/generated/finance-bg.dim_1920x1080.png",
     "frontend/src/components/AdminRouteGuard.tsx",
     "frontend/src/components/Header.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/pages/AdminAdsPage.tsx",
-    "frontend/src/pages/AdminAffiliatePage.tsx",
-    "frontend/src/pages/AdminPricingTermsPage.tsx",
-    "frontend/src/pages/AffiliateDashboardPage.tsx",
-    "frontend/src/pages/SignUpPage.tsx",
-    "frontend/src/pages/TermsPage.tsx",
-    "frontend/tailwind.config.js",
+    "frontend/src/constants/adminNav.ts",
+    "frontend/src/hooks/useActorCapabilities.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

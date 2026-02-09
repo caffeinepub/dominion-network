@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Menu, X, Wallet, CreditCard, Share2, Shield, Upload, ShoppingBag, Monitor, CheckCircle, Film, Music, Trophy, Laugh, Newspaper, Key, FileText, Tv, DollarSign, Package, MessageSquare, Sparkles, Edit, Image, Users, Link as LinkIcon } from 'lucide-react';
+import { Search, Menu, X, Wallet, CreditCard, Share2, Shield, ShoppingBag, Film, Music, Trophy, Laugh, Newspaper, Tv, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
@@ -7,6 +7,8 @@ import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetCallerUserProfile, useIsCallerAdmin } from '../hooks/useQueries';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ADMIN_NAV_ITEMS, getAdminNavSections } from '../constants/adminNav';
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,10 +17,12 @@ export function Header() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: userProfile } = useGetCallerUserProfile();
-  const { data: isAdmin, isLoading: isAdminLoading, isFetched: isAdminFetched } = useIsCallerAdmin();
+  const { data: isAdmin, isLoading: isAdminLoading } = useIsCallerAdmin();
 
   const isAuthenticated = !!identity;
-  const showAdminMenu = isAuthenticated && isAdminFetched && isAdmin === true;
+  const showAdminMenu = isAuthenticated && isAdmin === true && !isAdminLoading;
+
+  const adminNavSections = getAdminNavSections();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +49,15 @@ export function Header() {
     }
   };
 
+  const handleAdminNavClick = (route: string) => {
+    navigate({ to: route });
+  };
+
+  const handleMobileAdminNavClick = (route: string) => {
+    navigate({ to: route });
+    setMobileMenuOpen(false);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-lg shadow-primary/5">
       <div className="container mx-auto px-3 sm:px-4 md:px-6">
@@ -65,7 +78,7 @@ export function Header() {
               }}
             />
             <div className="hidden items-center gap-1.5 sm:gap-2 min-w-0">
-              <Monitor className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
               <span className="text-base sm:text-xl md:text-2xl font-bold gradient-text truncate">Dominion Network</span>
             </div>
           </button>
@@ -93,7 +106,7 @@ export function Header() {
                   Media
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-44 max-h-[400px] overflow-y-auto">
+              <DropdownMenuContent align="center" className="w-44">
                 <DropdownMenuLabel>Browse Genres</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate({ to: '/category/$categoryId', params: { categoryId: '1' } })}>
@@ -194,83 +207,36 @@ export function Header() {
                         <span className="hidden sm:inline">Admin</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 max-h-[500px] overflow-y-auto">
-                      <DropdownMenuLabel>Admin Panel</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/approvals' })}>
-                        <CheckCircle className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Approvals</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/content' })}>
-                        <Upload className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Content Upload</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/editing-room' })}>
-                        <Edit className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Editing Room</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/media-upload' })}>
-                        <Upload className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Media Upload</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/image-library' })}>
-                        <Image className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Image Library</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/ads' })}>
-                        <Monitor className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Advertisements</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/affiliate' })}>
-                        <Share2 className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Affiliate Program</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/mall' })}>
-                        <ShoppingBag className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Mall Management</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/price-control' })}>
-                        <DollarSign className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Price Control</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/display' })}>
-                        <Monitor className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Display Screen</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/wallet-management' })}>
-                        <Wallet className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Wallet Management</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/pricing-terms' })}>
-                        <FileText className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Pricing & Terms</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/hiiyah-chat' })}>
-                        <MessageSquare className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">HiiYah Chat Admin</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/excalibur-studios' })}>
-                        <Sparkles className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Excalibur Studios</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/members' })}>
-                        <Users className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Member Directory</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate({ to: '/admin/invite-links' })}>
-                        <LinkIcon className="h-4 w-4 mr-2 shrink-0" />
-                        <span className="truncate">Invite Links</span>
-                      </DropdownMenuItem>
+                    <DropdownMenuContent align="end" className="w-56 max-h-[80vh]">
+                      <ScrollArea className="max-h-[70vh]">
+                        {Object.entries(adminNavSections).map(([section, items], sectionIndex) => (
+                          <div key={section}>
+                            {sectionIndex > 0 && <DropdownMenuSeparator />}
+                            <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">
+                              {section}
+                            </DropdownMenuLabel>
+                            {items.map((item) => {
+                              const Icon = item.icon;
+                              return (
+                                <DropdownMenuItem 
+                                  key={item.route} 
+                                  onClick={() => handleAdminNavClick(item.route)}
+                                  className="min-w-0 cursor-pointer"
+                                >
+                                  <Icon className="h-4 w-4 mr-2 shrink-0" />
+                                  <span className="truncate">{item.label}</span>
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </ScrollArea>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
-                <Button 
-                  onClick={handleLogout} 
-                  variant="outline" 
+                <Button
+                  onClick={handleLogout}
+                  variant="ghost"
                   size="sm"
                   className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 shrink-0"
                 >
@@ -278,8 +244,8 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button 
-                onClick={handleLogin} 
+              <Button
+                onClick={handleLogin}
                 disabled={isLoggingIn}
                 size="sm"
                 className="h-8 sm:h-9 text-xs sm:text-sm px-3 sm:px-4 shrink-0"
@@ -301,158 +267,181 @@ export function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border/50 space-y-2 max-h-[70vh] overflow-y-auto">
-            <button 
-              onClick={() => { navigate({ to: '/' }); setMobileMenuOpen(false); }} 
-              className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-            >
-              Home
-            </button>
-            <button 
-              onClick={() => { navigate({ to: '/streaming-partners' }); setMobileMenuOpen(false); }} 
-              className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-            >
-              Streaming Partners
-            </button>
-            
-            {isAuthenticated && (
-              <>
-                <button 
-                  onClick={() => { navigate({ to: '/hiiyah-chat' }); setMobileMenuOpen(false); }} 
-                  className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                >
-                  HiiYah Chat
-                </button>
-                <button 
-                  onClick={() => { navigate({ to: '/wallet' }); setMobileMenuOpen(false); }} 
-                  className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                >
-                  Excalibur Wallet
-                </button>
-                <button 
-                  onClick={() => { navigate({ to: '/credit-card' }); setMobileMenuOpen(false); }} 
-                  className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                >
-                  Excalibur Card
-                </button>
-                <button 
-                  onClick={() => { navigate({ to: '/mall' }); setMobileMenuOpen(false); }} 
-                  className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                >
-                  Clear Magic Mall
-                </button>
-                <button 
-                  onClick={() => { navigate({ to: '/affiliate' }); setMobileMenuOpen(false); }} 
-                  className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                >
-                  Affiliate Dashboard
-                </button>
+          <div className="lg:hidden py-4 border-t border-border/50 max-h-[70vh] overflow-y-auto">
+            <nav className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  navigate({ to: '/' });
+                  setMobileMenuOpen(false);
+                }}
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => {
+                  navigate({ to: '/streaming-partners' });
+                  setMobileMenuOpen(false);
+                }}
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50"
+              >
+                Streaming Partners
+              </button>
 
-                {showAdminMenu && (
-                  <>
-                    <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Admin Panel
-                    </div>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/approvals' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Approvals
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/content' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Content Upload
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/editing-room' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Editing Room
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/media-upload' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Media Upload
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/image-library' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Image Library
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/ads' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Advertisements
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/affiliate' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Affiliate Program
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/mall' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Mall Management
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/price-control' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Price Control
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/display' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Display Screen
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/wallet-management' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Wallet Management
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/pricing-terms' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Pricing & Terms
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/hiiyah-chat' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      HiiYah Chat Admin
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/excalibur-studios' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Excalibur Studios
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/members' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Member Directory
-                    </button>
-                    <button 
-                      onClick={() => { navigate({ to: '/admin/invite-links' }); setMobileMenuOpen(false); }} 
-                      className="block w-full text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors"
-                    >
-                      Invite Links
-                    </button>
-                  </>
-                )}
-              </>
-            )}
+              {/* Mobile Media Genres */}
+              <div className="space-y-1 mt-2">
+                <p className="text-xs font-semibold text-muted-foreground px-2 py-1">Browse Genres</p>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '1' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
+                >
+                  <Film className="h-4 w-4" />
+                  Movies
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '2' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
+                >
+                  <Music className="h-4 w-4" />
+                  Music
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '3' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
+                >
+                  <Tv className="h-4 w-4" />
+                  Live TV
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '4' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
+                >
+                  <Trophy className="h-4 w-4" />
+                  Sports
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '5' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
+                >
+                  <Laugh className="h-4 w-4" />
+                  Comedy
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '6' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
+                >
+                  <Newspaper className="h-4 w-4" />
+                  News
+                </button>
+              </div>
+
+              {isAuthenticated && (
+                <>
+                  <div className="border-t border-border/50 my-2" />
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/hiiyah-chat' });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    HiiYah Chat
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/wallet' });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Excalibur Wallet
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/credit-card' });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Excalibur Card
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/mall' });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                    Clear Magic Mall
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/affiliate' });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Affiliate Program
+                  </button>
+
+                  {/* Mobile Admin Menu */}
+                  {showAdminMenu && (
+                    <>
+                      <div className="border-t border-border/50 my-2" />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 px-2 py-2">
+                          <Shield className="h-5 w-5 text-primary" />
+                          <p className="text-sm font-bold text-primary">Admin Menu</p>
+                        </div>
+                        {Object.entries(adminNavSections).map(([section, items]) => (
+                          <div key={section} className="space-y-1">
+                            <p className="text-xs font-semibold text-muted-foreground px-2 py-1 mt-2">
+                              {section}
+                            </p>
+                            {items.map((item) => {
+                              const Icon = item.icon;
+                              return (
+                                <button
+                                  key={item.route}
+                                  onClick={() => handleMobileAdminNavClick(item.route)}
+                                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
+                                >
+                                  <Icon className="h-4 w-4 shrink-0" />
+                                  <span className="truncate">{item.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </nav>
           </div>
         )}
       </div>

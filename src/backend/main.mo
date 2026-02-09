@@ -443,7 +443,7 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Approval & Invitation Logic - Admin only
+  // Approval & Invitation Logic - Admin only (no extra approval checks, just admin status)
   public query ({ caller }) func isCallerApproved() : async Bool {
     AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(userApprovalState, caller);
   };
@@ -453,14 +453,14 @@ actor {
   };
 
   public shared ({ caller }) func setApproval(user : Principal, status : UserApproval.ApprovalStatus) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
     UserApproval.setApproval(userApprovalState, user, status);
   };
 
   public query ({ caller }) func listApprovals() : async [UserApproval.UserApprovalInfo] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
     UserApproval.listApprovals(userApprovalState);
@@ -468,10 +468,10 @@ actor {
 
   // Invite links and RSVP integration - Admin only for generation and viewing
   public shared ({ caller }) func generateInviteCode() : async Text {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can generate invite codes");
     };
-    let blob : Blob = "";
+    let blob : Blob = ""; // explicit blob instead of generateUniqueCode
     let code = InviteLinksModule.generateUUID(blob);
     InviteLinksModule.generateInviteCode(inviteLinksState, code);
     code;
@@ -482,14 +482,14 @@ actor {
   };
 
   public query ({ caller }) func getAllRSVPs() : async [InviteLinksModule.RSVP] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view RSVPs");
     };
     InviteLinksModule.getAllRSVPs(inviteLinksState);
   };
 
   public query ({ caller }) func getInviteCodes() : async [InviteLinksModule.InviteCode] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view invite codes");
     };
     InviteLinksModule.getInviteCodes(inviteLinksState);

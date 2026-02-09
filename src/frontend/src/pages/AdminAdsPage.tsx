@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useGetAllAdvertisements, useCreateAdvertisement, useToggleAdvertisementActive, useDeleteAdvertisement } from '../hooks/useQueries';
+import { useGetAllAdvertisements, useCreateAdvertisement, useUpdateAdvertisement, useDeleteAdvertisement } from '../hooks/useQueries';
 import { Loader2, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AdPlacement, AdType } from '../types/backend-extended';
@@ -13,7 +13,7 @@ import type { AdPlacement, AdType } from '../types/backend-extended';
 export function AdminAdsPage() {
   const { data: ads = [], isLoading } = useGetAllAdvertisements();
   const createAd = useCreateAdvertisement();
-  const toggleActive = useToggleAdvertisementActive();
+  const updateAd = useUpdateAdvertisement();
   const deleteAd = useDeleteAdvertisement();
 
   const [formData, setFormData] = useState({
@@ -42,9 +42,18 @@ export function AdminAdsPage() {
     }
   };
 
-  const handleToggleActive = async (id: bigint) => {
+  const handleToggleActive = async (id: bigint, currentActive: boolean, ad: any) => {
     try {
-      await toggleActive.mutateAsync(id);
+      await updateAd.mutateAsync({
+        id,
+        title: ad.title,
+        content: ad.content,
+        imageUrl: ad.imageUrl,
+        targetUrl: ad.targetUrl,
+        placement: ad.placement,
+        adType: ad.adType,
+        active: !currentActive,
+      });
     } catch (error) {
       console.error('Failed to toggle ad:', error);
     }
@@ -198,8 +207,8 @@ export function AdminAdsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleToggleActive(ad.id)}
-                      disabled={toggleActive.isPending}
+                      onClick={() => handleToggleActive(ad.id, ad.active, ad)}
+                      disabled={updateAd.isPending}
                     >
                       {ad.active ? (
                         <>
