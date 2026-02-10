@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-restore-the-admin-menu-navigation-to-match-the-behavior-and-completeness-of-version-44-when-an-authenticated-user-is-an-admin-the-header-must-expose-an-admin-entry-point-that-provides-working-navigation-links-to-all-admin-rooms-pages-currently-routed-under-admin-at-minimum-approvals-editing-room-media-upload-room-image-library-ads-affiliate-content-display-mall-wallet-management-price-control-members-invite-links-pricing-terms-and-chat-administration",
-      "featureTitle": "Restore the Admin menu/navigation to match the behavior and completeness of version 44: when an authenticated user is an admin, the Header must expose an Admin entry point that provides working navigation links to all admin rooms/pages currently routed under \"/admin/*\" (at minimum: approvals, editing room, media upload room, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, and chat administration).",
+      "featureId": "feature-audit-the-set-of-requested-admin-rooms-against-the-currently-registered-admin-routes-and-admin-navigation-items-and-add-any-missing-rooms-so-that-every-requested-room-is-reachable-via-a-working-route-and-visible-in-the-admin-menu-without-breaking-existing-room-routes",
+      "featureTitle": "Audit the set of requested admin \"rooms\" against the currently registered admin routes and admin navigation items, and add any missing rooms so that every requested room is reachable via a working route and visible in the Admin menu without breaking existing room routes.",
       "files": [
-        "frontend/src/components/Header.tsx",
+        "frontend/src/App.tsx",
         "frontend/src/constants/adminNav.ts"
       ],
       "components": [
@@ -27,10 +27,12 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-admin-menu-is-available-and-fully-usable-on-mobile-as-well-as-desktop-the-mobile-navigation-must-include-an-admin-section-or-equivalent-entry-point-exposing-the-same-admin-destinations-as-the-desktop-admin-dropdown-without-clipping-overflow-and-closing-the-mobile-menu-after-navigation",
-      "featureTitle": "Ensure the Admin menu is available and fully usable on mobile as well as desktop: the mobile navigation must include an Admin section (or equivalent entry point) exposing the same admin destinations as the desktop Admin dropdown, without clipping/overflow, and closing the mobile menu after navigation.",
+      "featureId": "feature-if-there-is-no-dedicated-rooms-landing-page-for-admins-add-an-admin-access-guarded-page-at-admin-rooms-that-shows-a-responsive-grid-list-of-cards-linking-to-each-admin-room-using-the-admin-nav-items-as-the-source-of-truth-so-admins-can-access-all-rooms-from-one-place",
+      "featureTitle": "If there is no dedicated \"Rooms\" landing page for admins, add an admin-access-guarded page at `/admin/rooms` that shows a responsive grid/list of cards linking to each admin room (using the admin nav items as the source of truth) so admins can access all rooms from one place.",
       "files": [
-        "frontend/src/components/Header.tsx"
+        "frontend/src/App.tsx",
+        "frontend/src/constants/adminNav.ts",
+        "frontend/src/pages/AdminRoomsPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -47,55 +49,6 @@
       ],
       "testIds": [
         "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-provide-admins-full-moderation-capabilities-for-all-option-rooms-requiring-approval-across-the-admin-rooms-that-manage-pending-items-admins-must-be-able-to-upload-create-items-where-applicable-and-must-have-functioning-approve-and-reject-actions-for-every-pending-item-type-shown-in-the-ui",
-      "featureTitle": "Provide admins full moderation capabilities for all option rooms requiring approval: across the admin rooms that manage pending items, admins must be able to upload/create items where applicable and must have functioning approve and reject actions for every pending item type shown in the UI.",
-      "files": [
-        "frontend/src/hooks/useActorCapabilities.ts"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "authorization@4.0.0",
-        "http-outcalls@3.0.0",
-        "user-approval@3.0.0",
-        "camera@1.0.0",
-        "invite-links@3.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-eliminate-regressions-errors-introduced-after-version-44-related-to-the-admin-menu-and-admin-room-actions-the-app-must-build-and-run-cleanly-and-admin-navigation-and-moderation-actions-must-not-throw-uncaught-exceptions",
-      "featureTitle": "Eliminate regressions/errors introduced after version 44 related to the admin menu and admin room actions: the app must build and run cleanly, and admin navigation and moderation actions must not throw uncaught exceptions.",
-      "files": [
-        "frontend/src/components/AdminRouteGuard.tsx",
-        "frontend/src/components/Header.tsx"
-      ],
-      "components": [
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "authorization@4.0.0",
-        "http-outcalls@3.0.0",
-        "user-approval@3.0.0",
-        "camera@1.0.0",
-        "invite-links@3.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
       ],
       "confidence": "high"
     }

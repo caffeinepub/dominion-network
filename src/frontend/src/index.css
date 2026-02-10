@@ -120,6 +120,16 @@
     overflow-y: auto;
     overflow-x: hidden;
   }
+  
+  /* Ensure sticky header doesn't overlap content */
+  main {
+    @apply relative z-0;
+  }
+  
+  /* Safe spacing for content under sticky header */
+  .page-content {
+    @apply pt-4 sm:pt-6;
+  }
 }
 
 @layer utilities {

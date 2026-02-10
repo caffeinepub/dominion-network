@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Send, Paperclip, X, FileText } from 'lucide-react';
-import { useGetChatMessages, useSendChatMessage } from '../hooks/useQueries';
+import { useGetChatRoomMessages, useSendChatMessage } from '../hooks/useQueries';
 import { ExternalBlob } from '../backend';
 import { toast } from 'sonner';
 
@@ -19,7 +19,7 @@ export function ChatRoomComponent({ roomId, onClose }: ChatRoomComponentProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages = [], refetch } = useGetChatMessages(roomId);
+  const { data: messages = [], refetch } = useGetChatRoomMessages(roomId);
   const sendMessage = useSendChatMessage();
 
   useEffect(() => {

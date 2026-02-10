@@ -8,7 +8,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetCallerUserProfile, useIsCallerAdmin } from '../hooks/useQueries';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ADMIN_NAV_ITEMS, getAdminNavSections } from '../constants/adminNav';
+import { getAdminNavSections } from '../constants/adminNav';
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,7 +143,7 @@ export function Header() {
                   className="text-xs xl:text-sm font-medium text-foreground/80 hover:text-primary transition-colors flex items-center gap-1 whitespace-nowrap px-2 py-1"
                 >
                   <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden xl:inline">HiiYah Chat</span>
+                  <span className="hidden xl:inline">Chat</span>
                 </button>
                 <button 
                   onClick={() => navigate({ to: '/wallet' })} 
@@ -160,13 +160,6 @@ export function Header() {
                   <span className="hidden xl:inline">Card</span>
                 </button>
                 <button 
-                  onClick={() => navigate({ to: '/mall' })} 
-                  className="text-xs xl:text-sm font-medium text-foreground/80 hover:text-primary transition-colors flex items-center gap-1 whitespace-nowrap px-2 py-1"
-                >
-                  <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden xl:inline">Mall</span>
-                </button>
-                <button 
                   onClick={() => navigate({ to: '/affiliate' })} 
                   className="text-xs xl:text-sm font-medium text-foreground/80 hover:text-primary transition-colors flex items-center gap-1 whitespace-nowrap px-2 py-1"
                 >
@@ -175,70 +168,81 @@ export function Header() {
                 </button>
               </>
             )}
+
+            <button 
+              onClick={() => navigate({ to: '/mall' })} 
+              className="text-xs xl:text-sm font-medium text-foreground/80 hover:text-primary transition-colors flex items-center gap-1 whitespace-nowrap px-2 py-1"
+            >
+              <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden xl:inline">Mall</span>
+            </button>
+
+            {/* Admin Dropdown - Desktop */}
+            {showAdminMenu && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-xs xl:text-sm font-medium text-foreground/80 hover:text-primary transition-colors whitespace-nowrap px-2 py-1 flex items-center gap-1">
+                    <Shield className="h-3.5 w-3.5 shrink-0" />
+                    <span className="hidden xl:inline">Admin</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 max-h-[80vh]">
+                  <ScrollArea className="h-full max-h-[70vh]">
+                    {Object.entries(adminNavSections).map(([section, items], sectionIndex, sections) => (
+                      <div key={section}>
+                        <DropdownMenuLabel className="text-xs font-semibold text-primary/80 px-2 py-1.5">
+                          {section}
+                        </DropdownMenuLabel>
+                        {items.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <DropdownMenuItem
+                              key={item.route}
+                              onClick={() => handleAdminNavClick(item.route)}
+                              className="cursor-pointer px-2 py-1.5"
+                            >
+                              <Icon className="h-4 w-4 mr-2 shrink-0" />
+                              <span className="text-sm break-words">{item.label}</span>
+                            </DropdownMenuItem>
+                          );
+                        })}
+                        {sectionIndex < sections.length - 1 && <DropdownMenuSeparator />}
+                      </div>
+                    ))}
+                  </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </nav>
 
-          {/* Search and Auth */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
-            <form onSubmit={handleSearch} className="hidden md:flex items-center min-w-0">
-              <div className="relative min-w-0">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 w-32 lg:w-40 xl:w-48 h-9 bg-muted/50 border-border/50 focus:border-primary text-sm"
-                />
-              </div>
-            </form>
+          {/* Search Bar - Desktop */}
+          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2 flex-1 max-w-xs min-w-0">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground shrink-0" />
+              <Input
+                type="search"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 h-9 text-sm w-full"
+              />
+            </div>
+          </form>
 
+          {/* Auth Button - Desktop */}
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
             {isAuthenticated ? (
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div className="flex items-center gap-2">
                 {userProfile && (
-                  <span className="hidden xl:block text-sm text-muted-foreground max-w-[100px] truncate">
+                  <span className="text-xs xl:text-sm text-muted-foreground truncate max-w-[100px] xl:max-w-[150px]">
                     {userProfile.name}
                   </span>
                 )}
-                {showAdminMenu && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1 sm:gap-1.5 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-                        <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                        <span className="hidden sm:inline">Admin</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 max-h-[80vh]">
-                      <ScrollArea className="max-h-[70vh]">
-                        {Object.entries(adminNavSections).map(([section, items], sectionIndex) => (
-                          <div key={section}>
-                            {sectionIndex > 0 && <DropdownMenuSeparator />}
-                            <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">
-                              {section}
-                            </DropdownMenuLabel>
-                            {items.map((item) => {
-                              const Icon = item.icon;
-                              return (
-                                <DropdownMenuItem 
-                                  key={item.route} 
-                                  onClick={() => handleAdminNavClick(item.route)}
-                                  className="min-w-0 cursor-pointer"
-                                >
-                                  <Icon className="h-4 w-4 mr-2 shrink-0" />
-                                  <span className="truncate">{item.label}</span>
-                                </DropdownMenuItem>
-                              );
-                            })}
-                          </div>
-                        ))}
-                      </ScrollArea>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
                 <Button
                   onClick={handleLogout}
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 shrink-0"
+                  className="text-xs xl:text-sm whitespace-nowrap"
                 >
                   Logout
                 </Button>
@@ -248,199 +252,249 @@ export function Header() {
                 onClick={handleLogin}
                 disabled={isLoggingIn}
                 size="sm"
-                className="h-8 sm:h-9 text-xs sm:text-sm px-3 sm:px-4 shrink-0"
+                className="text-xs xl:text-sm whitespace-nowrap"
               >
                 {isLoggingIn ? 'Logging in...' : 'Login'}
               </Button>
             )}
-
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 hover:bg-muted rounded-md transition-colors shrink-0"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 hover:bg-accent rounded-md transition-colors shrink-0"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border/50 max-h-[70vh] overflow-y-auto">
+          <div className="lg:hidden border-t border-primary/20 py-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
             <nav className="flex flex-col gap-2">
+              {/* Search - Mobile */}
+              <form onSubmit={handleSearch} className="px-2 pb-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 w-full"
+                  />
+                </div>
+              </form>
+
               <button
                 onClick={() => {
                   navigate({ to: '/' });
                   setMobileMenuOpen(false);
                 }}
-                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50"
+                className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors"
               >
                 Home
               </button>
+
               <button
                 onClick={() => {
                   navigate({ to: '/streaming-partners' });
                   setMobileMenuOpen(false);
                 }}
-                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50"
+                className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors"
               >
                 Streaming Partners
               </button>
 
-              {/* Mobile Media Genres */}
-              <div className="space-y-1 mt-2">
-                <p className="text-xs font-semibold text-muted-foreground px-2 py-1">Browse Genres</p>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '1' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
-                >
-                  <Film className="h-4 w-4" />
-                  Movies
-                </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '2' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
-                >
-                  <Music className="h-4 w-4" />
-                  Music
-                </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '3' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
-                >
-                  <Tv className="h-4 w-4" />
-                  Live TV
-                </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '4' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
-                >
-                  <Trophy className="h-4 w-4" />
-                  Sports
-                </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '5' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
-                >
-                  <Laugh className="h-4 w-4" />
-                  Comedy
-                </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '6' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
-                >
-                  <Newspaper className="h-4 w-4" />
-                  News
-                </button>
+              {/* Media Genres - Mobile */}
+              <div className="px-4 py-2">
+                <div className="text-xs font-semibold text-primary/80 mb-2">Browse Genres</div>
+                <div className="flex flex-col gap-1 pl-2">
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/category/$categoryId', params: { categoryId: '1' } });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <Film className="h-4 w-4 shrink-0" />
+                    <span>Movies</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/category/$categoryId', params: { categoryId: '2' } });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <Music className="h-4 w-4 shrink-0" />
+                    <span>Music</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/category/$categoryId', params: { categoryId: '3' } });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <Tv className="h-4 w-4 shrink-0" />
+                    <span>Live TV</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/category/$categoryId', params: { categoryId: '4' } });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <Trophy className="h-4 w-4 shrink-0" />
+                    <span>Sports</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/category/$categoryId', params: { categoryId: '5' } });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <Laugh className="h-4 w-4 shrink-0" />
+                    <span>Comedy</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate({ to: '/category/$categoryId', params: { categoryId: '6' } });
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <Newspaper className="h-4 w-4 shrink-0" />
+                    <span>News</span>
+                  </button>
+                </div>
               </div>
 
               {isAuthenticated && (
                 <>
-                  <div className="border-t border-border/50 my-2" />
                   <button
                     onClick={() => {
                       navigate({ to: '/hiiyah-chat' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
                   >
-                    <MessageSquare className="h-4 w-4" />
-                    HiiYah Chat
+                    <MessageSquare className="h-4 w-4 shrink-0" />
+                    <span>HiiYah Chat</span>
                   </button>
                   <button
                     onClick={() => {
                       navigate({ to: '/wallet' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
                   >
-                    <Wallet className="h-4 w-4" />
-                    Excalibur Wallet
+                    <Wallet className="h-4 w-4 shrink-0" />
+                    <span>Excalibur Wallet</span>
                   </button>
                   <button
                     onClick={() => {
                       navigate({ to: '/credit-card' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
                   >
-                    <CreditCard className="h-4 w-4" />
-                    Excalibur Card
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/mall' });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
-                  >
-                    <ShoppingBag className="h-4 w-4" />
-                    Clear Magic Mall
+                    <CreditCard className="h-4 w-4 shrink-0" />
+                    <span>Excalibur Card</span>
                   </button>
                   <button
                     onClick={() => {
                       navigate({ to: '/affiliate' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 flex items-center gap-2"
+                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
                   >
-                    <Share2 className="h-4 w-4" />
-                    Affiliate Program
+                    <Share2 className="h-4 w-4 shrink-0" />
+                    <span>Affiliate Program</span>
                   </button>
-
-                  {/* Mobile Admin Menu */}
-                  {showAdminMenu && (
-                    <>
-                      <div className="border-t border-border/50 my-2" />
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 px-2 py-2">
-                          <Shield className="h-5 w-5 text-primary" />
-                          <p className="text-sm font-bold text-primary">Admin Menu</p>
-                        </div>
-                        {Object.entries(adminNavSections).map(([section, items]) => (
-                          <div key={section} className="space-y-1">
-                            <p className="text-xs font-semibold text-muted-foreground px-2 py-1 mt-2">
-                              {section}
-                            </p>
-                            {items.map((item) => {
-                              const Icon = item.icon;
-                              return (
-                                <button
-                                  key={item.route}
-                                  onClick={() => handleMobileAdminNavClick(item.route)}
-                                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-2 rounded hover:bg-muted/50 w-full flex items-center gap-2"
-                                >
-                                  <Icon className="h-4 w-4 shrink-0" />
-                                  <span className="truncate">{item.label}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
                 </>
               )}
+
+              <button
+                onClick={() => {
+                  navigate({ to: '/mall' });
+                  setMobileMenuOpen(false);
+                }}
+                className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+              >
+                <ShoppingBag className="h-4 w-4 shrink-0" />
+                <span>Clear Magic Mall</span>
+              </button>
+
+              {/* Admin Section - Mobile */}
+              {showAdminMenu && (
+                <div className="px-4 py-2 border-t border-primary/20 mt-2">
+                  <div className="text-xs font-semibold text-primary/80 mb-2 flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Admin Menu
+                  </div>
+                  <ScrollArea className="max-h-[50vh]">
+                    <div className="flex flex-col gap-1 pl-2">
+                      {Object.entries(adminNavSections).map(([section, items]) => (
+                        <div key={section} className="mb-3">
+                          <div className="text-xs font-semibold text-primary/60 mb-1.5 px-2">
+                            {section}
+                          </div>
+                          {items.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <button
+                                key={item.route}
+                                onClick={() => handleMobileAdminNavClick(item.route)}
+                                className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2 w-full"
+                              >
+                                <Icon className="h-4 w-4 shrink-0" />
+                                <span className="text-sm break-words">{item.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+
+              {/* Auth - Mobile */}
+              <div className="px-4 py-2 border-t border-primary/20 mt-2">
+                {isAuthenticated ? (
+                  <div className="space-y-2">
+                    {userProfile && (
+                      <div className="text-sm text-muted-foreground px-2">
+                        Logged in as: <span className="font-semibold">{userProfile.name}</span>
+                      </div>
+                    )}
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleLogin}
+                    disabled={isLoggingIn}
+                    className="w-full"
+                  >
+                    {isLoggingIn ? 'Logging in...' : 'Login'}
+                  </Button>
+                )}
+              </div>
             </nav>
           </div>
         )}

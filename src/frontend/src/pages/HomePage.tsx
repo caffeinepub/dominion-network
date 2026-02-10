@@ -8,6 +8,7 @@ import { Wallet, CreditCard, ShoppingBag, Film, Music, Trophy, Tv, MessageSquare
 import { useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { Badge } from '@/components/ui/badge';
+import { VersionBadge } from '../components/VersionBadge';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -64,9 +65,7 @@ export function HomePage() {
       {/* Version Badge */}
       <div className="container mx-auto px-4 sm:px-6 pt-4">
         <div className="flex justify-center">
-          <Badge variant="outline" className="text-primary border-primary/50 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold">
-            Version 41 - Responsive Layout Fixed
-          </Badge>
+          <VersionBadge />
         </div>
       </div>
 

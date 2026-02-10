@@ -1,115 +1,52 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Restore v44-style Admin navigation and harden admin moderation actions across approval-required rooms (frontend-only)",
+  "title": "Ensure all requested admin rooms exist and add /admin/rooms landing page",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Restore the Admin header menu entry point for authenticated admins with complete, working navigation to all existing /admin/* routes listed in the request.",
+      "summary": "Audit requested admin rooms vs registered routes and admin nav; add missing admin rooms with working routes and visible Admin menu items, plus an in-code route mapping list.",
       "acceptanceCriteria": [
-        "When logged in as an admin, an Admin menu is visible in the header and contains links to each of the listed admin routes.",
-        "Each Admin menu item navigates to an existing route defined in frontend/src/App.tsx and the page renders without runtime errors.",
-        "When not logged in or when logged in as a non-admin, the Admin menu is not shown and direct navigation to any \"/admin/*\" route is blocked by AdminRouteGuard."
+        "A documented list exists in code (or in the PR description) mapping each requested room name to its route.",
+        "Every requested room has a corresponding route registered in `frontend/src/App.tsx` and an entry in `frontend/src/constants/adminNav.ts` (unless explicitly noted as intentionally excluded).",
+        "Navigating to each requested room route renders a page (not a blank screen) and does not throw console errors."
       ],
       "file_operations": [
         {
           "path": "frontend/src/constants/adminNav.ts",
-          "operation": "create",
-          "description": "Create a single source of truth for admin navigation items (label + route) covering the required destinations (approvals, editing room, media upload room, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, chat administration), ensuring each maps to an existing route in frontend/src/App.tsx."
+          "operation": "modify",
+          "description": "Add/verify the complete set of requested admin rooms as `ADMIN_NAV_ITEMS` entries (Admin menu source of truth) and add an exported in-code mapping list (e.g., `REQUESTED_ADMIN_ROOMS_ROUTE_MAP` or similar) that maps each requested room label to its route. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/Header.tsx",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Update the desktop Admin dropdown to be generated from the shared admin navigation list so the header reliably includes links to every required /admin/* destination; keep visibility gated by authenticated admin status. Verify the component's usage instructions before implementing."
+          "description": "Audit admin route registrations against the requested admin rooms list and add any missing admin routes, ensuring each admin page is wrapped in `AdminRouteGuard` and existing routes remain unchanged. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Make the Admin navigation fully usable on mobile with an Admin section exposing the same destinations as desktop and closing the menu after navigation without overflow/clipping.",
+      "summary": "Add an admin-guarded '/admin/rooms' landing page that lists all admin rooms from adminNav as responsive link cards and is accessible from the Admin menu.",
       "acceptanceCriteria": [
-        "On small screens, an admin user can access the same admin destinations from the mobile menu as from desktop.",
-        "Mobile menu/admin items do not overflow the viewport; long labels wrap or truncate appropriately.",
-        "After selecting an admin destination from the mobile menu, the app navigates correctly and the mobile menu closes."
+        "`/admin/rooms` exists, is wrapped by `AdminRouteGuard`, and is accessible from the Admin menu.",
+        "The page lists all admin room links derived from `frontend/src/constants/adminNav.ts` (label + icon + route), and each link navigates correctly.",
+        "Layout is responsive (mobile + desktop) with no overlapping text/images and no horizontal overflow."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Add/restore a mobile Admin section that renders the same admin destinations as the desktop Admin dropdown (using the shared admin nav list), ensures items wrap/truncate within the viewport, and always calls setMobileMenuOpen(false) after navigation. Verify the component's usage instructions before implementing."
+          "path": "frontend/src/pages/AdminRoomsPage.tsx",
+          "operation": "create",
+          "description": "Create the Rooms landing page UI at `/admin/rooms` that renders a responsive grid/list of clickable cards sourced from `ADMIN_NAV_ITEMS` (or `getOrderedAdminNavSections()`), showing each item’s icon + label and navigating to its route; exclude the `/admin/rooms` item itself from the rendered list to avoid self-linking. Compose existing shadcn-ui primitives (e.g., Card/Button/ScrollArea) without editing `frontend/src/components/ui/*`. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/constants/adminNav.ts",
           "operation": "modify",
-          "description": "If needed, adjust existing global utility styles (without adding new global stylesheet entrypoints) to prevent mobile menu list items from clipping/overflowing (e.g., safe truncation/wrapping helpers) while preserving the current theme."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Ensure admin approval/edit/upload/approve/reject actions in approval-required admin rooms are wired, refresh UI state on completion, and clearly indicate when actions are unavailable due to missing backend support.",
-      "acceptanceCriteria": [
-        "In the approval-focused admin pages (e.g., AdminApprovalPage and any other admin room showing pending items), every displayed pending item type has working Approve and Reject actions for admins.",
-        "Approve/Reject actions result in a visible success/failure outcome in the UI and the affected lists refresh to reflect the new status/state.",
-        "No admin action silently no-ops due to missing backend methods; if an action is not supported, the UI must clearly indicate it is unavailable rather than failing silently.",
-        "Non-admin users cannot invoke approve/reject/upload/edit operations (backend enforces admin-only access where intended)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useActorCapabilities.ts",
-          "operation": "modify",
-          "description": "Expand capability detection to cover each moderation action used by admin approval-required rooms (per pending-item type: list + approve + reject, plus create/upload where applicable) so pages can reliably disable/hide actions and show an explicit “unavailable” message when a backend method is missing."
+          "description": "Add an Admin menu item for the new Rooms landing page (label like 'Rooms', route `/admin/rooms`, icon, section, order) so it is visible in the Admin dropdown menu and usable as the entrypoint to all rooms. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Harden admin moderation mutations/queries to (1) consistently surface method-unavailable errors, (2) invalidate the correct react-query keys after approve/reject/upload/create so lists refresh, and (3) avoid silent returns for admin actions; ensure any blob/image upload flows continue to use ExternalBlob patterns appropriately. Verify the blob-storage component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/AdminApprovalPage.tsx",
-          "operation": "modify",
-          "description": "Use actor capability detection to ensure every rendered pending-item section has enabled Approve/Reject (and bulk actions where present) only when supported; otherwise render a clear in-UI “Action unavailable” state. Ensure successful actions visibly update state (invalidate/refetch) and errors are displayed (toast + inline as needed). Verify the shadcn-ui component usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/AdminEditingRoomPage.tsx",
-          "operation": "modify",
-          "description": "Audit and update pending-item moderation controls so all displayed pending types have functioning approve/reject/delete/edit actions for admins, refresh lists after actions, and show a clear “unavailable” UI when required backend methods are absent (no silent no-ops). Verify the shadcn-ui component usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/AdminImageLibraryPage.tsx",
-          "operation": "modify",
-          "description": "Ensure image upload + pending image approve/reject flows are consistently enabled for admins when supported, show upload progress/success/failure, and disable/label actions when backend support is missing. Verify the blob-storage component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/AdminMediaUploadRoomPage.tsx",
-          "operation": "modify",
-          "description": "Ensure admin media upload/create flows are enabled where applicable, show clear success/failure feedback, and refresh lists after actions; if a media submit/approve/reject capability is missing, display it as unavailable rather than allowing a failing control. Verify the blob-storage component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/AdminHiiYahChatPage.tsx",
-          "operation": "modify",
-          "description": "Ensure all displayed pending chat/broadcast/hero-join moderation items have functional approve/reject actions for admins, refresh the lists after actions, and render an explicit unavailable state if required backend methods are missing. Verify the shadcn-ui component usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Remove post-v44 regressions causing admin navigation/action runtime errors and ensure admin flows run without uncaught exceptions.",
-      "acceptanceCriteria": [
-        "Frontend builds without TypeScript errors and runs without console errors when opening and using the Admin menu.",
-        "Backend canister builds without Motoko compilation errors.",
-        "Performing core admin actions (navigate to admin pages; upload where applicable; approve/reject pending items) does not produce uncaught runtime exceptions."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/AdminRouteGuard.tsx",
-          "operation": "modify",
-          "description": "Prevent repeated side effects during render (e.g., move error toasts to an effect and ensure stable conditional rendering) so blocked navigation to /admin/* does not create repeated toasts or runtime warnings; keep non-admin and unauthenticated users blocked."
-        },
-        {
-          "path": "frontend/src/components/Header.tsx",
-          "operation": "modify",
-          "description": "Harden header admin/nav interactions to avoid uncaught errors (e.g., ensure all admin menu clicks navigate to valid routes, handle admin-loading states safely, and ensure mobile menu state transitions are consistent). Verify the shadcn-ui component usage instructions before implementing."
+          "description": "Register the `/admin/rooms` route in the router and wrap it with `AdminRouteGuard`, wiring it to `AdminRoomsPage` so navigating to `/admin/rooms` renders the landing page. Verify the component's usage instructions before implementing."
         }
       ]
     }

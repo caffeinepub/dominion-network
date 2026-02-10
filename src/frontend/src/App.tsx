@@ -32,6 +32,7 @@ import { AdminImageLibraryPage } from './pages/AdminImageLibraryPage';
 import { AdminInviteLinksPage } from './pages/AdminInviteLinksPage';
 import { AdminInviteAcceptPage } from './pages/AdminInviteAcceptPage';
 import { AdminMemberDirectoryPage } from './pages/AdminMemberDirectoryPage';
+import { AdminRoomsPage } from './pages/AdminRoomsPage';
 
 const rootRoute = createRootRoute({
   component: Layout,
@@ -77,6 +78,12 @@ const categoryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/category/$categoryId',
   component: CategoryPage,
+});
+
+const adminRoomsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/rooms',
+  component: () => <AdminRouteGuard><AdminRoomsPage /></AdminRouteGuard>,
 });
 
 const adminAdsRoute = createRoute({
@@ -219,6 +226,7 @@ const routeTree = rootRoute.addChildren([
   flixiodTestRoute,
   iheartradioTestRoute,
   categoryRoute,
+  adminRoomsRoute,
   adminAdsRoute,
   adminAffiliateRoute,
   affiliateRoute,

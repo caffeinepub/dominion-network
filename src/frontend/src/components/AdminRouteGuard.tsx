@@ -10,11 +10,18 @@ interface AdminRouteGuardProps {
 
 export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
   const { identity, isInitializing } = useInternetIdentity();
-  const { data: isAdmin, isLoading: isAdminLoading, error } = useIsCallerAdmin();
+  const { data: isAdmin, isLoading: isAdminLoading, error, refetch } = useIsCallerAdmin();
   const [hasShownError, setHasShownError] = useState(false);
 
   const isAuthenticated = !!identity;
   const isLoading = isInitializing || isAdminLoading;
+
+  // Refetch admin status when identity changes
+  useEffect(() => {
+    if (identity && !isInitializing) {
+      refetch();
+    }
+  }, [identity, isInitializing, refetch]);
 
   useEffect(() => {
     if (error && !hasShownError) {
@@ -34,7 +41,8 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
+  // Explicitly check for admin status
+  if (!isAuthenticated || isAdmin !== true) {
     return <AdminAccessDenied />;
   }
 

@@ -1,90 +1,54 @@
 {
   "kind": "build_request",
-  "title": "Restore Admin menu (v44) and ensure admins can edit/upload/approve/reject across option rooms needing approval",
-  "priority": "high",
+  "title": "Add missing requested rooms to the admin area",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Restore the Admin menu/navigation to match the behavior and completeness of version 44: when an authenticated user is an admin, the Header must expose an Admin entry point that provides working navigation links to all admin rooms/pages currently routed under \"/admin/*\" (at minimum: approvals, editing room, media upload room, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, and chat administration).",
+      "text": "Audit the set of requested admin \"rooms\" against the currently registered admin routes and admin navigation items, and add any missing rooms so that every requested room is reachable via a working route and visible in the Admin menu without breaking existing room routes.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Bring the admin menu back from version 44."
+          "Add more rooms if any rooms requested are missing."
         ]
       },
       "acceptanceCriteria": [
-        "When logged in as an admin, an Admin menu is visible in the header and contains links to each of the listed admin routes.",
-        "Each Admin menu item navigates to an existing route defined in frontend/src/App.tsx and the page renders without runtime errors.",
-        "When not logged in or when logged in as a non-admin, the Admin menu is not shown and direct navigation to any \"/admin/*\" route is blocked by AdminRouteGuard."
+        "A documented list exists in code (or in the PR description) mapping each requested room name to its route.",
+        "Every requested room has a corresponding route registered in `frontend/src/App.tsx` and an entry in `frontend/src/constants/adminNav.ts` (unless explicitly noted as intentionally excluded).",
+        "Navigating to each requested room route renders a page (not a blank screen) and does not throw console errors."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure the Admin menu is available and fully usable on mobile as well as desktop: the mobile navigation must include an Admin section (or equivalent entry point) exposing the same admin destinations as the desktop Admin dropdown, without clipping/overflow, and closing the mobile menu after navigation.",
+      "text": "If there is no dedicated \"Rooms\" landing page for admins, add an admin-access-guarded page at `/admin/rooms` that shows a responsive grid/list of cards linking to each admin room (using the admin nav items as the source of truth) so admins can access all rooms from one place.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Bring the admin menu back from version 44."
+          "Add more rooms if any rooms requested are missing."
         ]
       },
       "acceptanceCriteria": [
-        "On small screens, an admin user can access the same admin destinations from the mobile menu as from desktop.",
-        "Mobile menu/admin items do not overflow the viewport; long labels wrap or truncate appropriately.",
-        "After selecting an admin destination from the mobile menu, the app navigates correctly and the mobile menu closes."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Provide admins full moderation capabilities for all option rooms requiring approval: across the admin rooms that manage pending items, admins must be able to upload/create items where applicable and must have functioning approve and reject actions for every pending item type shown in the UI.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Admin full access to edit, upload, approve and reject option rooms for all that need approval."
-        ]
-      },
-      "acceptanceCriteria": [
-        "In the approval-focused admin pages (e.g., AdminApprovalPage and any other admin room showing pending items), every displayed pending item type has working Approve and Reject actions for admins.",
-        "Approve/Reject actions result in a visible success/failure outcome in the UI and the affected lists refresh to reflect the new status/state.",
-        "No admin action silently no-ops due to missing backend methods; if an action is not supported, the UI must clearly indicate it is unavailable rather than failing silently.",
-        "Non-admin users cannot invoke approve/reject/upload/edit operations (backend enforces admin-only access where intended)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Eliminate regressions/errors introduced after version 44 related to the admin menu and admin room actions: the app must build and run cleanly, and admin navigation and moderation actions must not throw uncaught exceptions.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Do this without any error as requested."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Frontend builds without TypeScript errors and runs without console errors when opening and using the Admin menu.",
-        "Backend canister builds without Motoko compilation errors.",
-        "Performing core admin actions (navigate to admin pages; upload where applicable; approve/reject pending items) does not produce uncaught runtime exceptions."
+        "`/admin/rooms` exists, is wrapped by `AdminRouteGuard`, and is accessible from the Admin menu.",
+        "The page lists all admin room links derived from `frontend/src/constants/adminNav.ts` (label + icon + route), and each link navigates correctly.",
+        "Layout is responsive (mobile + desktop) with no overlapping text/images and no horizontal overflow."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/immutablePaths (notably: frontend/src/hooks/useInternetIdentity.ts/tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui/*).",
-    "Backend must remain single-actor (all Motoko logic in backend/main.mo); only add/update backend/migration.mo if a stable-state schema change is required."
+    "Do not edit any files under `frontend/src/components/ui` (compose existing UI components only).",
+    "Do not modify immutable hook files: `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`.",
+    "Keep backend architecture as a single Motoko actor; do not add additional canisters."
   ],
   "nonGoals": [
-    "Recreating unrelated UI/feature changes from version 44 outside the Admin menu and admin moderation capabilities.",
-    "Adding third-party authentication providers or any non-Internet-Identity auth.",
-    "Introducing external databases or additional backend services."
+    "Adding new backend data models or persistence for rooms.",
+    "Implementing real-time features (e.g., WebSockets) for rooms.",
+    "Adding third-party authentication beyond Internet Identity."
   ],
   "imageRequirements": {
     "required": [],

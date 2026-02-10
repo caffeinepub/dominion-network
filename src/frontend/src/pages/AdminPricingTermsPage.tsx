@@ -8,26 +8,21 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Save, DollarSign, FileText, AlertCircle } from 'lucide-react';
-import { 
-  useGetActiveTermsAndConditions, 
-  useCreateTermsAndConditions, 
-  useUpdateTermsAndConditions 
-} from '../hooks/useQueries';
+import { useGetActiveTerms, useCreateTerms } from '../hooks/useQueries';
 import { useGetCallerUserProfile } from '../hooks/useQueries';
 import { useNavigate } from '@tanstack/react-router';
+import { toast } from 'sonner';
 
 export function AdminPricingTermsPage() {
   const navigate = useNavigate();
   const { data: userProfile } = useGetCallerUserProfile();
-  const { data: activeTerms, isLoading: termsLoading } = useGetActiveTermsAndConditions();
-  const createTerms = useCreateTermsAndConditions();
-  const updateTerms = useUpdateTermsAndConditions();
+  const { data: activeTerms, isLoading: termsLoading } = useGetActiveTerms();
+  const createTerms = useCreateTerms();
 
   const [termsData, setTermsData] = useState({
     title: '',
     content: '',
     version: '',
-    isActive: true,
   });
 
   const [pricingData, setPricingData] = useState({
@@ -57,31 +52,21 @@ export function AdminPricingTermsPage() {
         title: activeTerms.title,
         content: activeTerms.content,
         version: activeTerms.version,
-        isActive: activeTerms.isActive,
       });
     }
   };
 
   const handleSaveTerms = async () => {
     try {
-      if (activeTerms) {
-        await updateTerms.mutateAsync({
-          id: activeTerms.id,
-          title: termsData.title,
-          content: termsData.content,
-          version: termsData.version,
-          isActive: termsData.isActive,
-        });
-      } else {
-        await createTerms.mutateAsync({
-          title: termsData.title,
-          content: termsData.content,
-          version: termsData.version,
-          isActive: termsData.isActive,
-        });
-      }
+      await createTerms.mutateAsync({
+        title: termsData.title,
+        content: termsData.content,
+        version: termsData.version,
+      });
+      toast.success('Terms saved successfully');
     } catch (error) {
       console.error('Failed to save terms:', error);
+      toast.error('Failed to save terms');
     }
   };
 
@@ -166,27 +151,13 @@ export function AdminPricingTermsPage() {
                 </p>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="active">Active Status</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Make this version visible to users
-                  </p>
-                </div>
-                <Switch
-                  id="active"
-                  checked={termsData.isActive}
-                  onCheckedChange={(checked) => setTermsData({ ...termsData, isActive: checked })}
-                />
-              </div>
-
               <div className="flex gap-3">
                 <Button
                   onClick={handleSaveTerms}
-                  disabled={createTerms.isPending || updateTerms.isPending || !termsData.title || !termsData.content}
+                  disabled={createTerms.isPending || !termsData.title || !termsData.content}
                   className="flex-1"
                 >
-                  {(createTerms.isPending || updateTerms.isPending) ? (
+                  {createTerms.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Saving...

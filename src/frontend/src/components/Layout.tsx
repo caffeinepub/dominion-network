@@ -35,6 +35,9 @@ export function Layout() {
     return 'bg-default-area';
   };
 
+  // Check if we're on an admin route
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -49,11 +52,12 @@ export function Layout() {
   return (
     <div className={`min-h-screen flex flex-col overflow-x-hidden ${getBackgroundClass()}`}>
       <Header />
-      <main className="flex-1 w-full">
+      <main className="flex-1 w-full pt-0">
         <Outlet />
       </main>
       <Footer />
-      <HeroHelper />
+      {/* Only show HeroHelper on non-admin routes */}
+      {!isAdminRoute && <HeroHelper />}
     </div>
   );
 }

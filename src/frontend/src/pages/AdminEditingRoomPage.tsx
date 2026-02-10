@@ -13,8 +13,7 @@ import {
   useRejectContentSubmission,
   useDeleteContent,
   useDeleteCategory,
-  useDeleteAdvertisement,
-  useDeleteAffiliateTier,
+  useDeleteAd,
   useDeleteDisplayContent,
 } from '../hooks/useQueries';
 import { toast } from 'sonner';
@@ -26,8 +25,7 @@ export function AdminEditingRoomPage() {
   const rejectContent = useRejectContentSubmission();
   const deleteContent = useDeleteContent();
   const deleteCategory = useDeleteCategory();
-  const deleteAd = useDeleteAdvertisement();
-  const deleteTier = useDeleteAffiliateTier();
+  const deleteAd = useDeleteAd();
   const deleteDisplay = useDeleteDisplayContent();
 
   const handleApprove = async (id: bigint) => {
@@ -64,12 +62,12 @@ export function AdminEditingRoomPage() {
         case 'advertisement':
           await deleteAd.mutateAsync(id);
           break;
-        case 'tier':
-          await deleteTier.mutateAsync(id);
-          break;
         case 'display':
           await deleteDisplay.mutateAsync(id);
           break;
+        default:
+          toast.info(`Delete functionality for ${type} coming soon`);
+          return;
       }
       toast.success(`${type} deleted successfully`);
     } catch (error) {
@@ -392,10 +390,10 @@ export function AdminEditingRoomPage() {
                                 <div className="flex-1 space-y-2">
                                   <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-lg">{item.content.title}</h3>
-                                    <Badge
-                                      variant="outline"
+                                    <Badge 
+                                      variant="outline" 
                                       className={
-                                        item.status === 'approved'
+                                        item.status === 'approved' 
                                           ? 'bg-green-500/10 text-green-500 border-green-500/30'
                                           : item.status === 'rejected'
                                           ? 'bg-red-500/10 text-red-500 border-red-500/30'

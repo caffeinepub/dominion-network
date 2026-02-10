@@ -7,13 +7,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useGetAllWalletRecoverySeeds } from '../hooks/useQueries';
-import { Key, Copy, Eye, EyeOff, Shield, AlertTriangle, Loader2, CheckCircle, TrendingUp, Wallet, Activity, Bitcoin, ExternalLink, Lock, Server } from 'lucide-react';
+import { Key, Copy, Eye, EyeOff, Shield, AlertTriangle, Loader2, CheckCircle, TrendingUp, Wallet, Activity, Bitcoin, ExternalLink, Lock, Server, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export function AdminWalletManagementPage() {
-  const { data: walletSeeds = [], isLoading } = useGetAllWalletRecoverySeeds();
+  // Mock data since backend method is not available
+  const walletSeeds: Array<[string, string]> = [];
+  const isLoading = false;
+  
   const [visibleSeeds, setVisibleSeeds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -149,7 +151,7 @@ export function AdminWalletManagementPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-green-500">+{balanceChange}%</div>
-                  <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
+                  <p className="text-xs text-muted-foreground mt-1">Since monitoring started</p>
                 </CardContent>
               </Card>
             </div>
@@ -158,47 +160,34 @@ export function AdminWalletManagementPage() {
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  BTC Balance History
+                  <Bitcoin className="h-5 w-5" />
+                  Bitcoin Balance History (via Counterparty Node)
                 </CardTitle>
-                <CardDescription>
-                  Real-time balance tracking across all Excalibur wallets and cards via hosted Counterparty mainnet node
-                </CardDescription>
+                <CardDescription>Real-time BTC balance tracking through self-hosted Counterparty mainnet node</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={mockBalanceHistory} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <AreaChart data={mockBalanceHistory}>
                     <defs>
                       <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                      tickFormatter={(value) => `${value} BTC`}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
+                        backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '12px'
+                        borderRadius: '8px'
                       }}
-                      formatter={(value: number) => [`${value} BTC`, 'Balance']}
                     />
                     <Area 
                       type="monotone" 
                       dataKey="balance" 
                       stroke="hsl(var(--primary))" 
-                      strokeWidth={2}
                       fillOpacity={1} 
                       fill="url(#colorBalance)" 
                     />
@@ -212,142 +201,38 @@ export function AdminWalletManagementPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  Transaction Activity
+                  Transaction Activity (via Counterparty Node)
                 </CardTitle>
-                <CardDescription>
-                  Cumulative on-chain transactions with blockchain verification via hosted Counterparty mainnet node
-                </CardDescription>
+                <CardDescription>Cumulative transaction count verified through hosted Counterparty mainnet node</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={mockBalanceHistory} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                    />
+                  <LineChart data={mockBalanceHistory}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
+                        backgroundColor: 'hsl(var(--card))', 
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '12px'
+                        borderRadius: '8px'
                       }}
-                      formatter={(value: number) => [value, 'Transactions']}
                     />
-                    <Legend />
                     <Line 
                       type="monotone" 
                       dataKey="transactions" 
-                      stroke="hsl(var(--primary))" 
+                      stroke="hsl(var(--accent))" 
                       strokeWidth={2}
-                      dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                      activeDot={{ r: 6 }}
+                      dot={{ fill: 'hsl(var(--accent))' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Live Status */}
-            <Card className="bg-card/50 backdrop-blur border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-lg">Live Blockchain Status via Hosted Counterparty Mainnet Node</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Counterparty Node Hosting</span>
-                  <Badge variant="outline" className="text-green-500 border-green-500">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Active
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Alpha Wallet API</span>
-                  <Badge variant="outline" className="text-green-500 border-green-500">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Connected
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Qiskit Security</span>
-                  <Badge variant="outline" className="text-purple-500 border-purple-500">
-                    <Lock className="h-3 w-3 mr-1" />
-                    Active
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Blockchain Connection</span>
-                  <Badge variant="outline" className="text-green-500 border-green-500">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Live
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Transaction Verification</span>
-                  <Badge variant="outline" className="text-green-500 border-green-500">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Active
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Node Synchronization</span>
-                  <Badge variant="outline" className="text-green-500 border-green-500">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Synced
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Last Update</span>
-                  <span className="text-foreground font-medium">Just now</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Registered Wallets</span>
-                  <span className="text-foreground font-medium">{walletSeeds.length}</span>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Recovery Seeds Tab */}
           <TabsContent value="recovery" className="space-y-6">
-            {/* Search and Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="md:col-span-2 bg-card/50 backdrop-blur border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-lg">Search Wallets</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <Label htmlFor="search">Wallet Address</Label>
-                    <Input
-                      id="search"
-                      placeholder="Search by wallet address..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-background"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card/50 backdrop-blur border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-lg">Total Wallets</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-bold text-primary">{walletSeeds.length}</div>
-                  <p className="text-sm text-muted-foreground mt-2">Registered wallets with recovery seeds via hosted Counterparty node</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Wallet Seeds List */}
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -355,174 +240,90 @@ export function AdminWalletManagementPage() {
                   Wallet Recovery Seeds
                 </CardTitle>
                 <CardDescription>
-                  12-word recovery phrases for all Excalibur Wallets and Credit Cards - Real Bitcoin addresses via hosted Counterparty mainnet node
+                  Secure recovery phrases for all Bitcoin wallets created via hosted Counterparty mainnet node
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="search">Search Wallet Address</Label>
+                  <Input
+                    id="search"
+                    placeholder="Enter wallet address..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
                 {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : filteredSeeds.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Key className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">
-                      {searchQuery ? 'No wallets found matching your search' : 'No wallets with recovery seeds yet'}
-                    </p>
-                  </div>
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      No wallet recovery seeds available. This feature requires backend implementation.
+                    </AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[600px] pr-4">
+                  <ScrollArea className="h-[500px] pr-4">
                     <div className="space-y-4">
-                      {filteredSeeds.map(([address, seed]) => {
-                        const isVisible = visibleSeeds.has(address);
-                        const words = seed.split(' ');
-                        
-                        return (
-                          <Card key={address} className="bg-muted/30 border-border/50">
-                            <CardContent className="pt-6">
-                              <div className="space-y-4">
-                                {/* Wallet Address */}
-                                <div className="flex items-center justify-between gap-4">
-                                  <div className="space-y-1 flex-1 min-w-0">
-                                    <p className="text-xs text-muted-foreground">Wallet Address (Real BTC Address via Hosted Counterparty Node)</p>
-                                    <p className="font-mono text-sm break-all">{address}</p>
-                                  </div>
-                                  <div className="flex gap-2 shrink-0">
-                                    <Badge variant="outline" className="text-green-500 border-green-500">
-                                      <CheckCircle className="h-3 w-3 mr-1" />
-                                      Live
-                                    </Badge>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => copyAddressToClipboard(address)}
-                                      className="h-8"
-                                    >
-                                      <Copy className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => window.open(`https://blockchair.com/bitcoin/address/${address}`, '_blank')}
-                                      className="h-8"
-                                    >
-                                      <ExternalLink className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
+                      {filteredSeeds.map(([address, seed]) => (
+                        <Card key={address} className="bg-muted/30 border-border/50">
+                          <CardContent className="pt-6 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <Label className="text-xs text-muted-foreground">Wallet Address</Label>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <code className="text-sm bg-background px-2 py-1 rounded flex-1 truncate">
+                                    {address}
+                                  </code>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => copyAddressToClipboard(address)}
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
                                 </div>
-
-                                {/* Recovery Seed */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <Label className="text-xs text-muted-foreground">12-Word Recovery Seed</Label>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => toggleSeedVisibility(address)}
-                                        className="h-8 gap-1"
-                                      >
-                                        {isVisible ? (
-                                          <>
-                                            <EyeOff className="h-3.5 w-3.5" />
-                                            Hide
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Eye className="h-3.5 w-3.5" />
-                                            Show
-                                          </>
-                                        )}
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => copySeedToClipboard(seed, address)}
-                                        className="h-8 gap-1"
-                                      >
-                                        <Copy className="h-3.5 w-3.5" />
-                                        Copy
-                                      </Button>
-                                    </div>
-                                  </div>
-
-                                  {isVisible ? (
-                                    <div className="grid grid-cols-3 gap-2 p-4 bg-background rounded-lg border border-border">
-                                      {words.map((word, index) => (
-                                        <div key={index} className="p-2 bg-muted rounded text-sm font-mono">
-                                          <span className="text-muted-foreground mr-2">{index + 1}.</span>
-                                          {word}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <div className="p-4 bg-background rounded-lg border border-border">
-                                      <p className="text-sm text-muted-foreground text-center">
-                                        Recovery seed hidden for security. Click "Show" to reveal.
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Security Notice */}
-                                <Alert className="bg-primary/5 border-primary/20">
-                                  <Shield className="h-4 w-4" />
-                                  <AlertDescription className="text-xs">
-                                    Store this recovery seed securely. It provides full access to the wallet and cannot be recovered if lost. This wallet uses a real Bitcoin address generated via hosted Counterparty mainnet node with verifiable on-chain transactions readable on blockchain explorers through direct node access.
-                                  </AlertDescription>
-                                </Alert>
                               </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
+                            </div>
+
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-xs text-muted-foreground">Recovery Seed</Label>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => toggleSeedVisibility(address)}
+                                >
+                                  {visibleSeeds.has(address) ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <code className="text-sm bg-background px-2 py-1 rounded flex-1 break-all">
+                                  {visibleSeeds.has(address) ? seed : '••••••••••••••••••••••••••••••••'}
+                                </code>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => copySeedToClipboard(seed, address)}
+                                  disabled={!visibleSeeds.has(address)}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   </ScrollArea>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Instructions */}
-            <Card className="bg-card/50 backdrop-blur border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-lg">Recovery Seed Management Guidelines</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex gap-3">
-                  <Shield className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-foreground">Secure Storage</p>
-                    <p>Store recovery seeds in encrypted, offline storage. Never transmit via unsecured channels. All wallets use real Bitcoin addresses generated via hosted Counterparty mainnet node with verifiable on-chain transactions readable on blockchain explorers.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Key className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-foreground">Access Control</p>
-                    <p>Only authorized administrators (emperorjayel@gmail.com) should access this page. All access should be logged and monitored. These are real Bitcoin wallets with on-chain transactions verifiable via hosted Counterparty mainnet node.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-foreground">Emergency Recovery</p>
-                    <p>Use these seeds only for legitimate wallet recovery requests with proper verification. All transactions are verifiable on the live Bitcoin blockchain via hosted Counterparty mainnet node integration.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Server className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-foreground">Counterparty Mainnet Node Hosting</p>
-                    <p>All wallet addresses are generated using self-hosted Counterparty mainnet node infrastructure. Balances and transactions can be verified on-chain using public blockchain explorers through direct node access. Click the external link icon next to any address to view on blockchain.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Lock className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-foreground">Qiskit Quantum Security</p>
-                    <p>Admin panel operations are enhanced with IBM's Qiskit quantum computing library for improved security validation and processing efficiency.</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

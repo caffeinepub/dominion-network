@@ -1,66 +1,61 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useGetActiveTerms } from '../hooks/useQueries';
+import { Loader2, FileText, AlertCircle } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, FileText } from 'lucide-react';
-import { useGetActiveTermsAndConditions } from '../hooks/useQueries';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export function TermsPage() {
   const navigate = useNavigate();
-  const { data: terms, isLoading } = useGetActiveTermsAndConditions();
+  const { data: activeTerms, isLoading } = useGetActiveTerms();
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <Button
-        variant="ghost"
-        onClick={() => navigate({ to: '/' })}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <Button variant="outline" onClick={() => navigate({ to: '/' })}>
+            ← Back to Home
+          </Button>
+        </div>
 
-      <Card className="border-primary/20 bg-card/50 backdrop-blur">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <FileText className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-3xl gradient-text">
-                {isLoading ? <Skeleton className="h-8 w-64" /> : terms?.title || 'Terms and Conditions'}
-              </CardTitle>
-              {!isLoading && terms?.version && (
-                <CardDescription className="text-sm mt-1">
-                  Version {terms.version}
-                </CardDescription>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="prose prose-invert max-w-none">
-          {isLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-            </div>
-          ) : terms ? (
-            <div 
-              className="text-foreground/80 leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: terms.content }}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Terms and Conditions are not currently available. Please contact support for more information.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <FileText className="h-6 w-6" />
+              Terms and Conditions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : !activeTerms ? (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Terms and conditions are not currently available. Please check back later or contact support.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <h2 className="text-xl font-semibold">{activeTerms.title}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Version {activeTerms.version} • Last updated:{' '}
+                    {new Date(Number(activeTerms.createdAt) / 1000000).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <div 
+                  className="prose prose-sm dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: activeTerms.content }}
+                />
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

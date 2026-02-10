@@ -421,7 +421,6 @@ actor {
 
   var initialized = false;
 
-  // User Profile Management (required by frontend)
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can access profiles");
@@ -443,7 +442,6 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Approval & Invitation Logic - Admin only (no extra approval checks, just admin status)
   public query ({ caller }) func isCallerApproved() : async Bool {
     AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(userApprovalState, caller);
   };
@@ -466,12 +464,11 @@ actor {
     UserApproval.listApprovals(userApprovalState);
   };
 
-  // Invite links and RSVP integration - Admin only for generation and viewing
   public shared ({ caller }) func generateInviteCode() : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can generate invite codes");
     };
-    let blob : Blob = ""; // explicit blob instead of generateUniqueCode
+    let blob : Blob = "";
     let code = InviteLinksModule.generateUUID(blob);
     InviteLinksModule.generateInviteCode(inviteLinksState, code);
     code;

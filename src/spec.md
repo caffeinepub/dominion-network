@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Restore the v44-style Admin menu and ensure admins can reliably navigate to all existing `/admin/*` pages and perform edit/upload/approve/reject actions across admin approval workflows without errors.
+**Goal:** Ensure all requested admin “rooms” are present, reachable via routes, and visible in the Admin menu, with a single landing page to access them.
 
 **Planned changes:**
-- Restore the Header Admin entry point for authenticated admins, with working links to all existing admin routes under `/admin/*` (including approvals, editing, media upload, image library, ads, affiliate, content, display, mall, wallet management, price control, members, invite links, pricing & terms, and chat administration).
-- Ensure the Admin navigation is fully usable on mobile (same destinations as desktop, no overflow/clipping, and mobile menu closes after navigation).
-- Fix/complete admin moderation capabilities in approval-oriented admin rooms so each pending item type shown has functioning approve/reject (and upload/create/edit where applicable), with clear UI feedback and list refreshes.
-- Address regressions since v44 so admin navigation and core admin actions do not throw runtime exceptions and the app builds cleanly (frontend TypeScript and backend Motoko).
+- Audit requested admin room pages against existing admin routes and Admin navigation items; add any missing routes and corresponding Admin menu entries without breaking current routes.
+- Add an admin-guarded `/admin/rooms` landing page that lists all admin rooms (derived from `frontend/src/constants/adminNav.ts`) as responsive cards/links (label + icon + route).
+- Document the mapping of each requested room name to its route in code and/or the PR description.
 
-**User-visible outcome:** Admin users see an Admin menu (desktop and mobile) that navigates to all admin pages, and can upload/create/edit and approve/reject pending items across admin approval rooms with clear success/failure feedback and no uncaught errors; non-admin users do not see the menu and cannot access `/admin/*` pages.
+**User-visible outcome:** Admins can see and navigate to every requested admin room from the Admin menu, and can also access a `/admin/rooms` page that lists links to all admin rooms in a responsive layout.

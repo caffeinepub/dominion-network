@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useGetAdvertisementsByPlacement, useTrackAdView, useTrackAdClick } from '../hooks/useQueries';
+import { useGetAdsByPlacement, useTrackAdView, useTrackAdClick } from '../hooks/useQueries';
 import { Card, CardContent } from '@/components/ui/card';
 import type { AdPlacement } from '../types/backend-extended';
 
@@ -8,7 +8,7 @@ interface AdBannerProps {
 }
 
 export function AdBanner({ placement }: AdBannerProps) {
-  const { data: ads = [] } = useGetAdvertisementsByPlacement(placement);
+  const { data: ads = [] } = useGetAdsByPlacement(placement);
   const trackView = useTrackAdView();
   const trackClick = useTrackAdClick();
 
