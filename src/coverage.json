@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T14:06:51.402Z",
+  "generatedAt": "2026-02-13T21:32:57.494Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,60 +12,86 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Remove any visible app version label (e.g., \"version 42\") from the UI, including removing the `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen usage of `APP_VERSION`/`VersionBadge` so end-users never see a version string in the interface.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminRoomsPage.tsx",
-          "frontend/src/components/VersionBadge.tsx",
-          "frontend/src/constants/appVersion.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminRoomsPage.tsx",
-          "frontend/src/components/VersionBadge.tsx",
-          "frontend/src/constants/appVersion.ts"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Implement (or restore) a backend canister method `isCallerAdmin` so the frontend hook `useIsCallerAdmin()` can reliably determine whether the logged-in Internet Identity principal is an admin.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Ensure the admin navigation experience is fully functional for authenticated admins: the Header must reliably show the Admin dropdown for admin users after Internet Identity login (desktop) and provide equivalent access on mobile, with all items coming from the admin navigation source (`getAdminNavSections()` / `ADMIN_NAV_ITEMS`).",
+        "summary": "Restore a complete, working Admin navigation experience so authenticated admins can reliably access every required admin room from (1) the Header Admin dropdown and (2) the Admin Rooms hub page at /admin/rooms.",
         "status": "missing",
         "plannedFiles": [
+          "frontend/src/constants/adminNav.ts",
           "frontend/src/components/Header.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Make the Admin Rooms hub a working “admin flow” entry point: `/admin/rooms` must list navigable rooms/links for editing, approvals, and uploads (and the rest of admin options), and each card/button must route to an existing admin page guarded by `AdminRouteGuard`.",
-        "status": "implemented",
-        "plannedFiles": [
           "frontend/src/pages/AdminRoomsPage.tsx",
           "frontend/src/App.tsx"
         ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Ensure the admin access flow is correct and consistent: all admin routes are protected, admins can access them, and non-admin users (or logged-out users) are blocked using the existing AdminAccessDenied screen without crashes or infinite loading states.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/AdminRouteGuard.tsx",
+          "frontend/src/hooks/useAdminStatus.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/AdminAccessDenied.tsx",
+          "frontend/src/App.tsx"
+        ],
         "matchedFiles": [
-          "frontend/src/pages/AdminRoomsPage.tsx"
+          "frontend/src/components/AdminRouteGuard.tsx",
+          "frontend/src/hooks/useAdminStatus.ts"
         ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Rebuild and/or verify that all required admin rooms and panels are present, routable, and do not crash; ensure each page renders with safe loading/empty/error states and that primary actions work end-to-end with the backend where supported. Required rooms: approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, and mall admin.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useActorCapabilities.ts",
+          "frontend/src/components/admin/AdminCapabilityNotice.tsx",
+          "frontend/src/pages/AdminMemberDirectoryPage.tsx",
+          "frontend/src/pages/AdminAdsPage.tsx",
+          "frontend/src/pages/AdminAffiliatePage.tsx",
+          "frontend/src/pages/AdminInviteLinksPage.tsx",
+          "frontend/src/pages/AdminInviteAcceptPage.tsx",
+          "frontend/src/pages/AdminApprovalPage.tsx",
+          "frontend/src/pages/AdminEditingRoomPage.tsx",
+          "frontend/src/pages/AdminMediaUploadRoomPage.tsx",
+          "frontend/src/pages/AdminImageLibraryPage.tsx",
+          "frontend/src/pages/AdminPricingTermsPage.tsx",
+          "frontend/src/pages/AdminPriceControlRoomPage.tsx",
+          "frontend/src/pages/AdminDisplayPage.tsx",
+          "frontend/src/pages/AdminMallPage.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/AdminCapabilityNotice.tsx",
+          "frontend/src/pages/AdminMemberDirectoryPage.tsx",
+          "frontend/src/pages/AdminAdsPage.tsx",
+          "frontend/src/pages/AdminAffiliatePage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Prevent regressions: keep all existing requested functionality working while finishing the admin system, and ensure no new runtime errors are introduced in unrelated areas (public pages, wallet, credit card, streaming partners, chat).",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/VersionBadge.tsx",
-    "frontend/src/constants/appVersion.ts",
-    "frontend/src/pages/AdminRoomsPage.tsx",
+    "frontend/src/components/AdminRouteGuard.tsx",
+    "frontend/src/components/admin/AdminCapabilityNotice.tsx",
+    "frontend/src/hooks/useAdminStatus.ts",
+    "frontend/src/pages/AdminAdsPage.tsx",
+    "frontend/src/pages/AdminAffiliatePage.tsx",
+    "frontend/src/pages/AdminMemberDirectoryPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

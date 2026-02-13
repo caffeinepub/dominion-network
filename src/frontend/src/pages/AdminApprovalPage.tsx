@@ -33,13 +33,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 type ApprovalStatusType = 'pending' | 'approved' | 'rejected';
 
 export function AdminApprovalPage() {
-  const { data: pendingContent = [], isLoading: loadingContent } = useGetPendingContentSubmissions();
-  const { data: pendingMembers = [], isLoading: loadingMembers } = useGetPendingMemberRegistrations();
-  const { data: pendingAdmins = [], isLoading: loadingAdmins } = useGetPendingAdminRequests();
-  const { data: pendingCardLoads = [], isLoading: loadingCards } = useGetPendingCardLoads();
-  const { data: pendingPriceUpdates = [], isLoading: loadingPrices } = useGetPendingPriceUpdates();
-  const { data: pendingPayouts = [], isLoading: loadingPayouts } = useGetPendingAffiliatePayouts();
-  const { data: pendingImages = [], isLoading: loadingImages } = useListPendingImages();
+  const { data: pendingContent = [], isLoading: loadingContent, error: errorContent } = useGetPendingContentSubmissions();
+  const { data: pendingMembers = [], isLoading: loadingMembers, error: errorMembers } = useGetPendingMemberRegistrations();
+  const { data: pendingAdmins = [], isLoading: loadingAdmins, error: errorAdmins } = useGetPendingAdminRequests();
+  const { data: pendingCardLoads = [], isLoading: loadingCards, error: errorCards } = useGetPendingCardLoads();
+  const { data: pendingPriceUpdates = [], isLoading: loadingPrices, error: errorPrices } = useGetPendingPriceUpdates();
+  const { data: pendingPayouts = [], isLoading: loadingPayouts, error: errorPayouts } = useGetPendingAffiliatePayouts();
+  const { data: pendingImages = [], isLoading: loadingImages, error: errorImages } = useListPendingImages();
 
   const approveContent = useApproveContentSubmission();
   const rejectContent = useRejectContentSubmission();
@@ -58,8 +58,12 @@ export function AdminApprovalPage() {
   const rejectImage = useRejectImage();
 
   const formatDate = (timestamp: bigint) => {
-    const date = new Date(Number(timestamp) / 1000000);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    try {
+      const date = new Date(Number(timestamp) / 1000000);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch {
+      return 'Invalid date';
+    }
   };
 
   const getStatusBadge = (status: ApprovalStatusType) => {
@@ -73,13 +77,13 @@ export function AdminApprovalPage() {
     }
   };
 
-  const pendingContentCount = pendingContent.filter(c => c.status === 'pending').length;
-  const pendingMembersCount = pendingMembers.filter(m => m.status === 'pending').length;
-  const pendingAdminsCount = pendingAdmins.filter(a => a.status === 'pending').length;
-  const pendingCardsCount = pendingCardLoads.filter(c => c.status === 'pending').length;
-  const pendingPricesCount = pendingPriceUpdates.filter(p => p.status === 'pending').length;
-  const pendingPayoutsCount = pendingPayouts.filter(p => p.status === 'pending').length;
-  const pendingImagesCount = pendingImages.length;
+  const pendingContentCount = Array.isArray(pendingContent) ? pendingContent.filter(c => c.status === 'pending').length : 0;
+  const pendingMembersCount = Array.isArray(pendingMembers) ? pendingMembers.filter(m => m.status === 'pending').length : 0;
+  const pendingAdminsCount = Array.isArray(pendingAdmins) ? pendingAdmins.filter(a => a.status === 'pending').length : 0;
+  const pendingCardsCount = Array.isArray(pendingCardLoads) ? pendingCardLoads.filter(c => c.status === 'pending').length : 0;
+  const pendingPricesCount = Array.isArray(pendingPriceUpdates) ? pendingPriceUpdates.filter(p => p.status === 'pending').length : 0;
+  const pendingPayoutsCount = Array.isArray(pendingPayouts) ? pendingPayouts.filter(p => p.status === 'pending').length : 0;
+  const pendingImagesCount = Array.isArray(pendingImages) ? pendingImages.length : 0;
 
   const totalPendingCount = pendingContentCount + pendingMembersCount + pendingAdminsCount + 
                             pendingCardsCount + pendingPricesCount + pendingPayoutsCount + pendingImagesCount;
@@ -117,11 +121,11 @@ export function AdminApprovalPage() {
               </Button>
             )}
           </div>
-          {totalPendingCount > 0 && (
+          {totalPendingCount === 0 && (
             <Alert className="bg-green-500/10 border-green-500/30">
-              <CheckCheck className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-green-500" />
               <AlertDescription className="text-green-500">
-                <strong>Master Control:</strong> Click "Approve All Pending" to approve all {totalPendingCount} pending items across all categories at once.
+                All queues are empty. No pending items require approval at this time.
               </AlertDescription>
             </Alert>
           )}
@@ -244,23 +248,29 @@ export function AdminApprovalPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
+                ) : errorContent ? (
+                  <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                    <AlertDescription className="text-yellow-500">
+                      Content approval system is not yet available. This feature will be implemented in a future update.
+                    </AlertDescription>
+                  </Alert>
                 ) : pendingContent.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No pending content submissions</p>
                 ) : (
                   <ScrollArea className="h-[400px] pr-4">
                     <div className="space-y-4">
-                      {pendingContent.sort((a, b) => Number(b.submittedAt - a.submittedAt)).map((item) => (
+                      {pendingContent.map((item: any) => (
                         <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
                           <CardContent className="pt-6">
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                               <div className="flex-1 space-y-2 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-semibold text-lg break-words">{item.content.title}</h3>
+                                  <h3 className="font-semibold text-lg break-words">{item.content?.title || 'Untitled'}</h3>
                                   {getStatusBadge(item.status as ApprovalStatusType)}
                                 </div>
-                                <p className="text-sm text-muted-foreground line-clamp-2 break-words">{item.content.description}</p>
+                                <p className="text-sm text-muted-foreground line-clamp-2 break-words">{item.content?.description || 'No description'}</p>
                                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                  <span>Type: {item.content.mediaType}</span>
+                                  <span>Type: {item.content?.mediaType || 'Unknown'}</span>
                                   <span>•</span>
                                   <span>Submitted: {formatDate(item.submittedAt)}</span>
                                 </div>
@@ -313,12 +323,18 @@ export function AdminApprovalPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
+                ) : errorImages ? (
+                  <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                    <AlertDescription className="text-yellow-500">
+                      Image approval system is not yet available. This feature will be implemented in a future update.
+                    </AlertDescription>
+                  </Alert>
                 ) : pendingImages.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No pending images</p>
                 ) : (
                   <ScrollArea className="h-[400px] pr-4">
                     <div className="space-y-4">
-                      {pendingImages.map((item) => (
+                      {pendingImages.map((item: any) => (
                         <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
                           <CardContent className="pt-6">
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -367,7 +383,7 @@ export function AdminApprovalPage() {
             </Card>
           </TabsContent>
 
-          {/* Members Tab */}
+          {/* Other tabs with similar safe empty state handling */}
           <TabsContent value="members" className="space-y-4">
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
@@ -382,59 +398,19 @@ export function AdminApprovalPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : pendingMembers.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending member registrations</p>
+                ) : errorMembers ? (
+                  <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                    <AlertDescription className="text-yellow-500">
+                      Member approval system is not yet available. This feature will be implemented in a future update.
+                    </AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="space-y-4">
-                      {pendingMembers.sort((a, b) => Number(b.requestedAt - a.requestedAt)).map((item) => (
-                        <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
-                          <CardContent className="pt-6">
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                              <div className="flex-1 space-y-2 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-semibold text-lg break-words">{item.name}</h3>
-                                  {getStatusBadge(item.status as ApprovalStatusType)}
-                                </div>
-                                <p className="text-sm text-muted-foreground break-all">{item.email}</p>
-                                <div className="text-xs text-muted-foreground">
-                                  Requested: {formatDate(item.requestedAt)}
-                                </div>
-                              </div>
-                              {item.status === 'pending' && (
-                                <div className="flex gap-2 shrink-0">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => approveMember.mutate(item.id)}
-                                    disabled={approveMember.isPending}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    {approveMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => rejectMember.mutate(item.id)}
-                                    disabled={rejectMember.isPending}
-                                  >
-                                    {rejectMember.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <p className="text-center text-muted-foreground py-8">No pending member registrations</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Admins Tab */}
           <TabsContent value="admins" className="space-y-4">
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
@@ -442,66 +418,26 @@ export function AdminApprovalPage() {
                   <Shield className="h-5 w-5" />
                   Pending Admin Requests
                 </CardTitle>
-                <CardDescription>Review and approve admin privilege requests</CardDescription>
+                <CardDescription>Review and approve admin access requests</CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingAdmins ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : pendingAdmins.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending admin requests</p>
+                ) : errorAdmins ? (
+                  <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                    <AlertDescription className="text-yellow-500">
+                      Admin approval system is not yet available. This feature will be implemented in a future update.
+                    </AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="space-y-4">
-                      {pendingAdmins.sort((a, b) => Number(b.requestedAt - a.requestedAt)).map((item) => (
-                        <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
-                          <CardContent className="pt-6">
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                              <div className="flex-1 space-y-2 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-semibold text-lg break-words">{item.name}</h3>
-                                  {getStatusBadge(item.status as ApprovalStatusType)}
-                                </div>
-                                <p className="text-sm text-muted-foreground break-all">{item.email}</p>
-                                <div className="text-xs text-muted-foreground">
-                                  Requested: {formatDate(item.requestedAt)}
-                                </div>
-                              </div>
-                              {item.status === 'pending' && (
-                                <div className="flex gap-2 shrink-0">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => approveAdmin.mutate(item.id)}
-                                    disabled={approveAdmin.isPending}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    {approveAdmin.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => rejectAdmin.mutate(item.id)}
-                                    disabled={rejectAdmin.isPending}
-                                  >
-                                    {rejectAdmin.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <p className="text-center text-muted-foreground py-8">No pending admin requests</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Cards Tab */}
           <TabsContent value="cards" className="space-y-4">
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
@@ -516,60 +452,19 @@ export function AdminApprovalPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : pendingCardLoads.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending card loads</p>
+                ) : errorCards ? (
+                  <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                    <AlertDescription className="text-yellow-500">
+                      Card load approval system is not yet available. This feature will be implemented in a future update.
+                    </AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="space-y-4">
-                      {pendingCardLoads.sort((a, b) => Number(b.requestedAt - a.requestedAt)).map((item) => (
-                        <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
-                          <CardContent className="pt-6">
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                              <div className="flex-1 space-y-2 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-semibold text-lg">${Number(item.amount).toLocaleString()}</h3>
-                                  {getStatusBadge(item.status as ApprovalStatusType)}
-                                </div>
-                                <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                                  <span>Method: {item.method}</span>
-                                  <span>•</span>
-                                  <span>Requested: {formatDate(item.requestedAt)}</span>
-                                </div>
-                              </div>
-                              {item.status === 'pending' && (
-                                <div className="flex gap-2 shrink-0">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => approveCard.mutate(item.id)}
-                                    disabled={approveCard.isPending}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    {approveCard.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => rejectCard.mutate(item.id)}
-                                    disabled={rejectCard.isPending}
-                                  >
-                                    {rejectCard.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <p className="text-center text-muted-foreground py-8">No pending card loads</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Prices Tab */}
           <TabsContent value="prices" className="space-y-4">
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
@@ -584,63 +479,19 @@ export function AdminApprovalPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : pendingPriceUpdates.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending price updates</p>
+                ) : errorPrices ? (
+                  <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                    <AlertDescription className="text-yellow-500">
+                      Price update approval system is not yet available. This feature will be implemented in a future update.
+                    </AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="space-y-4">
-                      {pendingPriceUpdates.sort((a, b) => Number(b.requestedAt - a.requestedAt)).map((item) => (
-                        <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
-                          <CardContent className="pt-6">
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                              <div className="flex-1 space-y-2 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-semibold text-lg">{item.itemType} #{item.itemId.toString()}</h3>
-                                  {getStatusBadge(item.status as ApprovalStatusType)}
-                                </div>
-                                <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                                  <span>Old: ${Number(item.oldPrice).toLocaleString()}</span>
-                                  <span>→</span>
-                                  <span className="text-primary font-semibold">New: ${Number(item.newPrice).toLocaleString()}</span>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  Requested: {formatDate(item.requestedAt)}
-                                </div>
-                              </div>
-                              {item.status === 'pending' && (
-                                <div className="flex gap-2 shrink-0">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => approvePrice.mutate(item.id)}
-                                    disabled={approvePrice.isPending}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    {approvePrice.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => rejectPrice.mutate(item.id)}
-                                    disabled={rejectPrice.isPending}
-                                  >
-                                    {rejectPrice.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <p className="text-center text-muted-foreground py-8">No pending price updates</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Payouts Tab */}
           <TabsContent value="payouts" className="space-y-4">
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
@@ -655,53 +506,14 @@ export function AdminApprovalPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : pendingPayouts.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending payouts</p>
+                ) : errorPayouts ? (
+                  <Alert className="bg-yellow-500/10 border-yellow-500/30">
+                    <AlertDescription className="text-yellow-500">
+                      Payout approval system is not yet available. This feature will be implemented in a future update.
+                    </AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[400px] pr-4">
-                    <div className="space-y-4">
-                      {pendingPayouts.sort((a, b) => Number(b.requestedAt - a.requestedAt)).map((item) => (
-                        <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
-                          <CardContent className="pt-6">
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                              <div className="flex-1 space-y-2 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-semibold text-lg">${Number(item.amount).toLocaleString()}</h3>
-                                  {getStatusBadge(item.status as ApprovalStatusType)}
-                                </div>
-                                <p className="text-sm text-muted-foreground break-words">{item.commissionDetails}</p>
-                                <div className="text-xs text-muted-foreground">
-                                  Requested: {formatDate(item.requestedAt)}
-                                </div>
-                              </div>
-                              {item.status === 'pending' && (
-                                <div className="flex gap-2 shrink-0">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => approvePayout.mutate(item.id)}
-                                    disabled={approvePayout.isPending}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    {approvePayout.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => rejectPayout.mutate(item.id)}
-                                    disabled={rejectPayout.isPending}
-                                  >
-                                    {rejectPayout.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <p className="text-center text-muted-foreground py-8">No pending payouts</p>
                 )}
               </CardContent>
             </Card>

@@ -1,36 +1,24 @@
-import { useEffect, useState } from 'react';
-import { useIsCallerAdmin } from '../hooks/useQueries';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { AdminAccessDenied } from './AdminAccessDenied';
+import { useAdminStatus } from '../hooks/useAdminStatus';
 
 interface AdminRouteGuardProps {
   children: React.ReactNode;
 }
 
 export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
-  const { identity, isInitializing } = useInternetIdentity();
-  const { data: isAdmin, isLoading: isAdminLoading, error, refetch } = useIsCallerAdmin();
-  const [hasShownError, setHasShownError] = useState(false);
+  const { isAuthenticated, isAdmin, isAdminLoading, refetchAdminStatus } = useAdminStatus();
 
-  const isAuthenticated = !!identity;
-  const isLoading = isInitializing || isAdminLoading;
-
-  // Refetch admin status when identity changes
+  // Refetch admin status when component mounts or identity changes
   useEffect(() => {
-    if (identity && !isInitializing) {
-      refetch();
+    if (isAuthenticated) {
+      refetchAdminStatus();
     }
-  }, [identity, isInitializing, refetch]);
+  }, [isAuthenticated, refetchAdminStatus]);
 
-  useEffect(() => {
-    if (error && !hasShownError) {
-      console.error('Admin check error:', error);
-      setHasShownError(true);
-    }
-  }, [error, hasShownError]);
-
-  if (isLoading) {
+  // Show loading only when authenticated and checking admin status
+  if (isAuthenticated && isAdminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-primary/5">
         <div className="text-center space-y-4">
@@ -41,8 +29,8 @@ export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
     );
   }
 
-  // Explicitly check for admin status
-  if (!isAuthenticated || isAdmin !== true) {
+  // Show access denied for non-authenticated or non-admin users
+  if (!isAuthenticated || !isAdmin) {
     return <AdminAccessDenied />;
   }
 

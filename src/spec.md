@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Restore the full admin flow by reliably detecting admin users, showing complete admin navigation/rooms for admins, and removing any visible app version label from the UI.
+**Goal:** Complete and fix the Admin area so admins can reliably navigate to all required admin rooms and use them without crashes, while non-admins are consistently blocked.
 
 **Planned changes:**
-- Remove all visible version label/badge rendering across the app (including removing `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen uses of `APP_VERSION` / `VersionBadge`).
-- Implement/restore the backend canister method `isCallerAdmin` so the frontend hook `useIsCallerAdmin()` can accurately determine admin status for the logged-in Internet Identity principal.
-- Ensure the Header shows the Admin navigation for authenticated admins (desktop and mobile), with items sourced from `getAdminNavSections()` / `ADMIN_NAV_ITEMS`, and hides it for non-admins.
-- Make `/admin/rooms` a functional admin hub that lists navigable room cards/links sourced from `ADMIN_NAV_ITEMS` (excluding `/admin/rooms`), routing to existing admin pages guarded by `AdminRouteGuard`.
+- Restore a complete Admin navigation experience for authenticated admins via (1) the Header Admin dropdown and (2) the /admin/rooms hub page, ensuring all links match registered routes and work on desktop/mobile.
+- Make admin access flow consistent across all /admin/* routes: protect routes, allow admins through, and route non-admin/logged-out users to the existing AdminAccessDenied screen without crashes or infinite loading.
+- Rebuild and/or verify all required admin rooms and panels are present, routable, and stable with safe loading/empty/error states; ensure primary actions work end-to-end where backend support exists (otherwise show clear non-crashing “capability unavailable” messaging).
+- Prevent regressions by ensuring no new runtime errors are introduced in core non-admin routes and existing navigation/auth flows continue to work without requiring hard refresh.
 
-**User-visible outcome:** Admin users can log in with Internet Identity and reliably access the full Admin menu (desktop and mobile) and a working Admin Rooms hub with links for editing, approvals, uploads, and related admin pages; no page displays an app version label.
+**User-visible outcome:** Admin users can access every required admin page from the header dropdown and /admin/rooms, use supported actions (e.g., ads CRUD/toggle, invite links generation/accept flow, approvals/editing flows, uploads/image library, pricing/terms, member directory, display screen, mall admin) with stable UI states, while non-admin users are blocked with the existing access denied screen and the rest of the app remains unaffected.

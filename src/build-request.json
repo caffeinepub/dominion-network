@@ -1,100 +1,102 @@
 {
   "kind": "build_request",
-  "title": "Restore functional admin flow: enable admin detection, show full admin menu/rooms, and remove visible version label",
-  "priority": "high",
+  "title": "Complete and fix the Admin area (navigation, access flow, and all required admin rooms)",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Remove any visible app version label (e.g., \"version 42\") from the UI, including removing the `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen usage of `APP_VERSION`/`VersionBadge` so end-users never see a version string in the interface.",
+      "text": "Restore a complete, working Admin navigation experience so authenticated admins can reliably access every required admin room from (1) the Header Admin dropdown and (2) the Admin Rooms hub page at /admin/rooms.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-4",
-          "recent-messages-8"
+          "msg-1"
         ],
         "quotes": [
-          "It just says version 42. I do not want it to show the version",
-          "Remove/hide displayed app version label (e.g., showing \"version 42\") from the UI."
+          "You still did not accomplish the requested job. Get the admin area done as requested."
         ]
       },
       "acceptanceCriteria": [
-        "Navigating to /admin/rooms does not show `VersionBadge` and no version text appears in the header/content/footer of that page.",
-        "No page in the app renders a visible version label or badge (e.g., \"version 42\"), including after login and on both desktop and mobile breakpoints.",
-        "Removing the version label does not break layout or navigation."
+        "When logged in as an admin, the Header shows an Admin dropdown that contains links to every required admin room, and each link navigates successfully.",
+        "/admin/rooms is accessible to admins and shows a hub UI with links to every required admin room (excluding self-link).",
+        "All admin navigation links match the actual registered router paths (no 404s, no broken links).",
+        "Admin navigation is usable on both desktop and mobile (no overflow, items are scrollable when long)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Implement (or restore) a backend canister method `isCallerAdmin` so the frontend hook `useIsCallerAdmin()` can reliably determine whether the logged-in Internet Identity principal is an admin.",
-      "target": "backend",
+      "text": "Ensure the admin access flow is correct and consistent: all admin routes are protected, admins can access them, and non-admin users (or logged-out users) are blocked using the existing AdminAccessDenied screen without crashes or infinite loading states.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "recent-messages-4",
-          "project_state.json"
+          "msg-1"
         ],
         "quotes": [
-          "Make sure all admin options are live and functional with full admin access.",
-          "Implement (or restore) the backend method `isCallerAdmin` so the frontend’s `useIsCallerAdmin()` query can accurately determine admin status for the logged-in principal."
+          "Get the admin area done as requested."
         ]
       },
       "acceptanceCriteria": [
-        "The backend exposes an `isCallerAdmin` method that returns `true` for principals that are admins per the canister’s access control state and `false` otherwise.",
-        "After deploying, a principal that is an admin receives `true` from `actor.isCallerAdmin()` when called from the frontend.",
-        "The method does not trap for authenticated users; it returns a boolean result."
+        "Every /admin/* route is guarded so that non-authenticated or non-admin users cannot view admin pages.",
+        "Non-admin and logged-out users attempting to access /admin/* routes see the existing access denied UI (not a blank screen).",
+        "Admins do not see access denied for valid admin routes; guard verification completes successfully.",
+        "Admin status checks are resilient to identity changes (login/logout) and do not require a hard refresh to start working."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Ensure the admin navigation experience is fully functional for authenticated admins: the Header must reliably show the Admin dropdown for admin users after Internet Identity login (desktop) and provide equivalent access on mobile, with all items coming from the admin navigation source (`getAdminNavSections()` / `ADMIN_NAV_ITEMS`).",
-      "target": "frontend",
+      "text": "Rebuild and/or verify that all required admin rooms and panels are present, routable, and do not crash; ensure each page renders with safe loading/empty/error states and that primary actions work end-to-end with the backend where supported. Required rooms: approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, and mall admin.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "recent-messages-4",
-          "project_state.json"
+          "msg-1"
         ],
         "quotes": [
-          "I want it to show the admin version that has rooms and links for editing, approvals and uploads as requested.",
-          "Admin menu is not showing up in the deployed draft app (v53), blocking admin access to admin options."
+          "You still did not accomplish the requested job."
         ]
       },
       "acceptanceCriteria": [
-        "When logged in as an admin, the Header renders an Admin entry (desktop) and the admin navigation is accessible on mobile as well.",
-        "Admin navigation items are derived from `getAdminNavSections()` / `ADMIN_NAV_ITEMS` and are not missing/hidden for admins.",
-        "Clicking any Admin navigation item navigates to its route and renders the corresponding admin page (or an admin-guarded denial only when not an admin).",
-        "When logged in as a non-admin (or logged out), the Admin navigation is not shown and admin routes render the access denied UI via `AdminRouteGuard`."
+        "Each required admin room has a working route and renders without runtime errors in the browser console.",
+        "Each room has safe loading/empty/error UI so missing data or backend errors do not crash the page.",
+        "Admin Ads supports create/update/delete/toggle active without UI dead-ends (buttons either work or show a clear, non-crashing error).",
+        "Admin Affiliate supports creating and listing tiers (or shows a clear message if backend capability is missing).",
+        "Admin Invite Links can generate/list codes and copy invite URLs; invite accept flow at /invite/accept works for valid/invalid tokens with clear messaging.",
+        "Approvals and Editing Room pages allow approve/reject flows (or show capability-based disabling with clear explanation) and never crash when queues are empty.",
+        "Media Upload and Image Library allow upload flows (or degrade gracefully if storage/back-end methods are unavailable), and list items with correct grouping/status.",
+        "Pricing & Terms and Price Control pages render and allow saving changes where supported; otherwise show a clear non-crashing placeholder stating the capability is unavailable.",
+        "Member Directory loads and displays user profiles (or shows a clear message if the backend method is unavailable) and supports basic filtering/search UI without crashing.",
+        "Display Screen admin page loads current state and allows setting/updating display content (or degrades gracefully with clear messaging).",
+        "Mall Admin page renders and supports CRUD actions (or degrades gracefully with clear messaging)."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Make the Admin Rooms hub a working “admin flow” entry point: `/admin/rooms` must list navigable rooms/links for editing, approvals, and uploads (and the rest of admin options), and each card/button must route to an existing admin page guarded by `AdminRouteGuard`.",
-      "target": "frontend",
+      "text": "Prevent regressions: keep all existing requested functionality working while finishing the admin system, and ensure no new runtime errors are introduced in unrelated areas (public pages, wallet, credit card, streaming partners, chat).",
+      "target": "both",
       "source": {
         "messageIds": [
-          "recent-messages-4",
-          "recent-messages-8"
+          "msg-1"
         ],
         "quotes": [
-          "I want it to show the admin version that has rooms and links for editing, approvals and uploads as requested.",
-          "Implement full admin menu/UI with rooms and links for editing, approvals, and uploads, all live and functional with full admin access."
+          "Get the admin area done as requested."
         ]
       },
       "acceptanceCriteria": [
-        "/admin/rooms renders a grid/list of admin rooms sourced from `ADMIN_NAV_ITEMS` (excluding self-link to /admin/rooms).",
-        "The list includes (at minimum) links/cards for: Content Approval & Editing (`/admin/editing-room`), Approvals (`/admin/approvals`), Media Upload (`/admin/media-upload`), Image Library (`/admin/image-library`), and Uploads & Downloads (`/admin/content`).",
-        "Each room card and its “Open Room” control correctly navigates to the specified route.",
-        "No version label/badge is displayed anywhere on the Admin Rooms page."
+        "No new console errors are introduced on core non-admin routes (/, /wallet, /credit-card, /streaming-partners, /hiiyah-chat, /mall, /terms).",
+        "Existing navigation (public and authenticated user navigation) continues to work after admin fixes.",
+        "Admin changes do not break Internet Identity login/logout flow and do not require a page refresh to recover from auth changes."
       ]
     }
   ],
   "constraints": [
-    "Frontend must not modify any files under `frontend/src/components/ui` or other immutable paths listed in SYSTEM_CONTEXT.",
-    "Backend must remain a single Motoko actor in `backend/main.mo`; only add `backend/migration.mo` if state migration is truly required.",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not edit files under frontend/src/components/ui (compose these components instead).",
+    "Do not edit immutable hook/bootstrap files listed in SYSTEM_CONTEXT (frontend/src/hooks/useInternetIdentity.ts / .tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
+    "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Adding third-party authentication providers (only Internet Identity is supported).",
+    "Adding new unrelated product features outside the admin restoration scope.",
+    "Integrating third-party authentication providers (only Internet Identity is supported).",
     "Adding external databases or non-Motoko backend services.",
-    "Implementing new admin product features beyond making the already-present admin pages/menu/rooms visible and functional and removing the version label."
+    "Real-time features via WebSockets/push notifications."
   ],
   "imageRequirements": {
     "required": [],

@@ -2,12 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-any-visible-app-version-label-e-g-version-42-from-the-ui-including-removing-the-versionbadge-from-adminroomspage-and-eliminating-any-other-on-screen-usage-of-app-version-versionbadge-so-end-users-never-see-a-version-string-in-the-interface",
-      "featureTitle": "Remove any visible app version label (e.g., \"version 42\") from the UI, including removing the `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen usage of `APP_VERSION`/`VersionBadge` so end-users never see a version string in the interface.",
+      "featureId": "feature-ensure-the-admin-access-flow-is-correct-and-consistent-all-admin-routes-are-protected-admins-can-access-them-and-non-admin-users-or-logged-out-users-are-blocked-using-the-existing-adminaccessdenied-screen-without-crashes-or-infinite-loading-states",
+      "featureTitle": "Ensure the admin access flow is correct and consistent: all admin routes are protected, admins can access them, and non-admin users (or logged-out users) are blocked using the existing AdminAccessDenied screen without crashes or infinite loading states.",
       "files": [
-        "frontend/src/components/VersionBadge.tsx",
-        "frontend/src/constants/appVersion.ts",
-        "frontend/src/pages/AdminRoomsPage.tsx"
+        "frontend/src/components/AdminRouteGuard.tsx",
+        "frontend/src/hooks/useAdminStatus.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -23,15 +22,18 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-make-the-admin-rooms-hub-a-working-admin-flow-entry-point-admin-rooms-must-list-navigable-rooms-links-for-editing-approvals-and-uploads-and-the-rest-of-admin-options-and-each-card-button-must-route-to-an-existing-admin-page-guarded-by-adminrouteguard",
-      "featureTitle": "Make the Admin Rooms hub a working “admin flow” entry point: `/admin/rooms` must list navigable rooms/links for editing, approvals, and uploads (and the rest of admin options), and each card/button must route to an existing admin page guarded by `AdminRouteGuard`.",
+      "featureId": "feature-rebuild-and-or-verify-that-all-required-admin-rooms-and-panels-are-present-routable-and-do-not-crash-ensure-each-page-renders-with-safe-loading-empty-error-states-and-that-primary-actions-work-end-to-end-with-the-backend-where-supported-required-rooms-approvals-dashboards-editing-room-uploads-pricing-terms-price-control-image-library-wallet-management-ads-affiliate-member-directory-invite-links-display-screen-and-mall-admin",
+      "featureTitle": "Rebuild and/or verify that all required admin rooms and panels are present, routable, and do not crash; ensure each page renders with safe loading/empty/error states and that primary actions work end-to-end with the backend where supported. Required rooms: approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, and mall admin.",
       "files": [
-        "frontend/src/pages/AdminRoomsPage.tsx"
+        "frontend/src/components/admin/AdminCapabilityNotice.tsx",
+        "frontend/src/pages/AdminAdsPage.tsx",
+        "frontend/src/pages/AdminAffiliatePage.tsx",
+        "frontend/src/pages/AdminMemberDirectoryPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -47,7 +49,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-4"
+        "REQ-3"
       ],
       "confidence": "high"
     }

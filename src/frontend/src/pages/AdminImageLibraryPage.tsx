@@ -1,95 +1,79 @@
 import { useState } from 'react';
-import { Image, Upload, CheckCircle, XCircle, Download, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { Image, Trash2, CheckCircle, XCircle, Upload, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   useListPendingImages,
   useListApprovedImages,
   useUploadImage,
   useApproveImage,
   useRejectImage,
-  useGetImageBlob,
   useEraseAllImages,
 } from '../hooks/useQueries';
-import { ExternalBlob } from '../backend';
-import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function AdminImageLibraryPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const { data: pendingImages = [], isLoading: loadingPending } = useListPendingImages();
   const { data: approvedImages = [], isLoading: loadingApproved } = useListApprovedImages();
   const uploadImage = useUploadImage();
   const approveImage = useApproveImage();
   const rejectImage = useRejectImage();
-  const getImageBlob = useGetImageBlob();
-  const eraseAll = useEraseAllImages();
+  const eraseAllImages = useEraseAllImages();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      setImageFile(e.target.files[0]);
     }
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile || !title.trim()) {
-      toast.error('Please provide a title and select an image');
-      return;
-    }
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!imageFile) return;
 
-    try {
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const blob = ExternalBlob.fromBytes(uint8Array).withUploadProgress((percentage) => {
-        setUploadProgress(percentage);
-      });
+    const formData = {
+      title,
+      description,
+      file: imageFile,
+    };
 
-      await uploadImage.mutateAsync({
-        title,
-        description,
-        image: blob,
-        uploadTime: BigInt(Date.now() * 1000000),
-      });
-
-      setTitle('');
-      setDescription('');
-      setSelectedFile(null);
-      setUploadProgress(0);
-    } catch (error) {
-      console.error('Upload error:', error);
-    }
-  };
-
-  const handleDownload = async (id: bigint, title: string) => {
-    try {
-      const blob = await getImageBlob.mutateAsync(id);
-      const bytes = await blob.getBytes();
-      const file = new Blob([bytes], { type: 'image/jpeg' });
-      const url = URL.createObjectURL(file);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title}.jpg`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download image');
-    }
+    uploadImage.mutate(formData, {
+      onSuccess: () => {
+        setTitle('');
+        setDescription('');
+        setImageFile(null);
+        const fileInput = document.getElementById('image-file') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      },
+    });
   };
 
   const formatDate = (timestamp: bigint) => {
-    const date = new Date(Number(timestamp) / 1000000);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    try {
+      const date = new Date(Number(timestamp) / 1000000);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch {
+      return 'Invalid date';
+    }
   };
 
   return (
@@ -99,12 +83,9 @@ export function AdminImageLibraryPage() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-bold gradient-text flex items-center gap-3">
-                <Image className="h-8 w-8" />
-                Image Library
-              </h1>
+              <h1 className="text-3xl sm:text-4xl font-bold gradient-text">Image Library</h1>
               <p className="text-muted-foreground text-sm sm:text-base">
-                Upload, approve, and manage all platform images
+                Upload, manage, and approve images for the platform
               </p>
             </div>
             <AlertDialog>
@@ -116,28 +97,18 @@ export function AdminImageLibraryPage() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
-                    Confirm Erase All Images
-                  </AlertDialogTitle>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action will permanently delete all images in the library (pending, approved, and rejected). This cannot be undone.
+                    This action cannot be undone. This will permanently delete all images from the library.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => eraseAll.mutate()}
-                    className="bg-destructive hover:bg-destructive/90"
+                    onClick={() => eraseAllImages.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    {eraseAll.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Erasing...
-                      </>
-                    ) : (
-                      'Erase All'
-                    )}
+                    Delete All
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -145,84 +116,68 @@ export function AdminImageLibraryPage() {
           </div>
         </div>
 
-        {/* Upload Section */}
+        {/* Upload Form */}
         <Card className="bg-card/50 backdrop-blur border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5" />
               Upload New Image
             </CardTitle>
-            <CardDescription>All uploads default to pending status and require approval</CardDescription>
+            <CardDescription>Add a new image to the library for approval</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent>
+            <form onSubmit={handleUpload} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter image title"
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="file">Image File *</Label>
+                <Label htmlFor="description">Description</Label>
                 <Input
-                  id="file"
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter image description"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="image-file">Image File</Label>
+                <Input
+                  id="image-file"
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
+                  required
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter image description (optional)"
-                rows={3}
-              />
-            </div>
-            {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-            <Button
-              onClick={handleUpload}
-              disabled={uploadImage.isPending || !selectedFile || !title.trim()}
-              className="w-full sm:w-auto"
-            >
-              {uploadImage.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Image
-                </>
-              )}
-            </Button>
+              <Button type="submit" disabled={uploadImage.isPending || !imageFile}>
+                {uploadImage.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Image
+                  </>
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
 
         {/* Image Lists */}
         <Tabs defaultValue="pending" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-            <TabsTrigger value="pending" className="text-sm">
+          <TabsList className="bg-muted/50">
+            <TabsTrigger value="pending" className="gap-2">
+              <AlertCircle className="h-4 w-4" />
               Pending
               {pendingImages.length > 0 && (
                 <Badge variant="destructive" className="ml-2">
@@ -230,7 +185,8 @@ export function AdminImageLibraryPage() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="approved" className="text-sm">
+            <TabsTrigger value="approved" className="gap-2">
+              <CheckCircle className="h-4 w-4" />
               Approved
               {approvedImages.length > 0 && (
                 <Badge variant="secondary" className="ml-2">
@@ -256,29 +212,31 @@ export function AdminImageLibraryPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : pendingImages.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending images</p>
+                  <Alert>
+                    <AlertDescription>No pending images to review</AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[500px] pr-4">
+                  <ScrollArea className="h-[400px] pr-4">
                     <div className="space-y-4">
-                      {pendingImages.map((item) => (
+                      {pendingImages.map((item: any) => (
                         <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
                           <CardContent className="pt-6">
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                              <div className="flex-1 space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-semibold text-lg">{item.title}</h3>
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold text-lg break-words">{item.title}</h3>
                                   <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
                                     Pending
                                   </Badge>
                                 </div>
                                 {item.description && (
-                                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                                  <p className="text-sm text-muted-foreground break-words">{item.description}</p>
                                 )}
                                 <div className="text-xs text-muted-foreground">
                                   Uploaded: {formatDate(item.uploadTime)}
                                 </div>
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 shrink-0">
                                 <Button
                                   size="sm"
                                   onClick={() => approveImage.mutate(item.id)}
@@ -322,10 +280,10 @@ export function AdminImageLibraryPage() {
             <Card className="bg-card/50 backdrop-blur border-primary/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <Image className="h-5 w-5" />
                   Approved Images
                 </CardTitle>
-                <CardDescription>Manage approved images</CardDescription>
+                <CardDescription>All approved images in the library</CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingApproved ? (
@@ -333,37 +291,29 @@ export function AdminImageLibraryPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : approvedImages.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No approved images</p>
+                  <Alert>
+                    <AlertDescription>No approved images yet</AlertDescription>
+                  </Alert>
                 ) : (
-                  <ScrollArea className="h-[500px] pr-4">
+                  <ScrollArea className="h-[400px] pr-4">
                     <div className="space-y-4">
-                      {approvedImages.map((item) => (
+                      {approvedImages.map((item: any) => (
                         <Card key={item.id.toString()} className="bg-muted/30 border-border/50">
                           <CardContent className="pt-6">
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                              <div className="flex-1 space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-semibold text-lg">{item.title}</h3>
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold text-lg break-words">{item.title}</h3>
                                   <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/30">
                                     Approved
                                   </Badge>
                                 </div>
                                 {item.description && (
-                                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                                  <p className="text-sm text-muted-foreground break-words">{item.description}</p>
                                 )}
                                 <div className="text-xs text-muted-foreground">
                                   Uploaded: {formatDate(item.uploadTime)}
                                 </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleDownload(item.id, item.title)}
-                                >
-                                  <Download className="h-4 w-4 mr-1" />
-                                  Download
-                                </Button>
                               </div>
                             </div>
                           </CardContent>

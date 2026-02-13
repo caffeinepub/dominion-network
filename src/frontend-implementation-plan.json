@@ -1,75 +1,204 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Restore functional admin flow: enable admin detection, show full admin menu/rooms, and remove visible version label",
+  "title": "Admin area restoration: navigation, guarded access, and stable admin rooms",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Remove all visible app version UI so no page renders a version label/badge (including removing VersionBadge from Admin Rooms).",
+      "summary": "Ensure a complete, reliable admin navigation experience from both the Header Admin dropdown and the /admin/rooms hub, with all links matching registered router paths and working well on desktop/mobile.",
       "acceptanceCriteria": [
-        "Navigating to /admin/rooms does not show `VersionBadge` and no version text appears in the header/content/footer of that page.",
-        "No page in the app renders a visible version label or badge (e.g., \"version 42\"), including after login and on both desktop and mobile breakpoints.",
-        "Removing the version label does not break layout or navigation."
+        "When logged in as an admin, the Header shows an Admin dropdown that contains links to every required admin room, and each link navigates successfully.",
+        "/admin/rooms is accessible to admins and shows a hub UI with links to every required admin room (excluding self-link).",
+        "All admin navigation links match the actual registered router paths (no 404s, no broken links).",
+        "Admin navigation is usable on both desktop and mobile (no overflow, items are scrollable when long)."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/constants/adminNav.ts",
+          "operation": "modify",
+          "description": "Audit and align the admin nav item list against the actual TanStack Router paths registered in frontend/src/App.tsx; ensure it contains every required admin room (approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, mall admin) and nothing points to non-existent paths."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Ensure the Admin dropdown uses the same single source of truth as /admin/rooms (adminNav sections/items), and that both desktop dropdown and mobile menu present all required admin room links with scrollable containers to prevent overflow. Verify the component's usage instructions before implementing."
+        },
+        {
           "path": "frontend/src/pages/AdminRoomsPage.tsx",
           "operation": "modify",
-          "description": "Remove the `VersionBadge` import and render from the Admin Rooms page header so no version string is visible on /admin/rooms."
+          "description": "Ensure the /admin/rooms hub lists links for every required admin room (derived from adminNav), excludes the current page route, and remains usable on small screens (scroll area, responsive grid, long-label wrapping). Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/VersionBadge.tsx",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Change `VersionBadge` to render nothing (or otherwise be non-visible) to ensure no accidental usage anywhere in the UI can display a version label. Verify the component's usage instructions before implementing."
+          "description": "Verify all admin room routes required by the BuildRequest are registered and match frontend/src/constants/adminNav.ts exactly; keep /admin/rooms routable and ensure navigation targets do not produce 404s."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Make admin access protection consistent across all /admin/* routes using the existing guard + AdminAccessDenied screen, resilient to login/logout identity changes with no crashes or infinite loading.",
+      "acceptanceCriteria": [
+        "Every /admin/* route is guarded so that non-authenticated or non-admin users cannot view admin pages.",
+        "Non-admin and logged-out users attempting to access /admin/* routes see the existing access denied UI (not a blank screen).",
+        "Admins do not see access denied for valid admin routes; guard verification completes successfully.",
+        "Admin status checks are resilient to identity changes (login/logout) and do not require a hard refresh to start working."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/AdminRouteGuard.tsx",
+          "operation": "modify",
+          "description": "Harden the guard behavior to prevent infinite loading and blank states: treat unauthenticated users as immediately denied (render AdminAccessDenied), refetch admin status on identity changes, and ensure loading resolves predictably when identity is cleared or swapped."
         },
         {
-          "path": "frontend/src/constants/appVersion.ts",
+          "path": "frontend/src/hooks/useAdminStatus.ts",
           "operation": "modify",
-          "description": "Remove or neutralize the exported `APP_VERSION` label (and any intended UI usage expectations) so it cannot be displayed to end-users."
+          "description": "Make admin status checks resilient to identity changes by ensuring the computed loading/auth/admin states reset correctly on login/logout and that refetch behavior does not rely on timeouts; keep a single source of truth for Header and AdminRouteGuard."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure the admin-status query hook behavior is stable across actor/identity changes (no stale cached admin=true for a new identity, no hanging retries). Where appropriate, key queries by current principal and avoid retry loops on authorization failures."
+        },
+        {
+          "path": "frontend/src/components/AdminAccessDenied.tsx",
+          "operation": "modify",
+          "description": "Verify the access denied UI is safe to render in all unauthorized cases (logged out, non-admin, actor unavailable) and provides a clear action to navigate away without throwing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Confirm every /admin/* route is wrapped with AdminRouteGuard (including any newly added required rooms) and that /invite/accept remains accessible without the admin guard for invite acceptance flow."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Ensure authenticated admins reliably see the full Admin navigation (desktop and mobile) sourced from `getAdminNavSections()` / `ADMIN_NAV_ITEMS`, while non-admins never see it and remain blocked by `AdminRouteGuard`.",
+      "summary": "Rebuild/verify all required admin rooms are present, routable, non-crashing, and provide safe loading/empty/error states with end-to-end actions where backend capabilities exist (otherwise degrade gracefully with clear messaging).",
       "acceptanceCriteria": [
-        "When logged in as an admin, the Header renders an Admin entry (desktop) and the admin navigation is accessible on mobile as well.",
-        "Admin navigation items are derived from `getAdminNavSections()` / `ADMIN_NAV_ITEMS` and are not missing/hidden for admins.",
-        "Clicking any Admin navigation item navigates to its route and renders the corresponding admin page (or an admin-guarded denial only when not an admin).",
-        "When logged in as a non-admin (or logged out), the Admin navigation is not shown and admin routes render the access denied UI via `AdminRouteGuard`."
+        "Each required admin room has a working route and renders without runtime errors in the browser console.",
+        "Each room has safe loading/empty/error UI so missing data or backend errors do not crash the page.",
+        "Admin Ads supports create/update/delete/toggle active without UI dead-ends (buttons either work or show a clear, non-crashing error).",
+        "Admin Affiliate supports creating and listing tiers (or shows a clear message if backend capability is missing).",
+        "Admin Invite Links can generate/list codes and copy invite URLs; invite accept flow at /invite/accept works for valid/invalid tokens with clear messaging.",
+        "Approvals and Editing Room pages allow approve/reject flows (or show capability-based disabling with clear explanation) and never crash when queues are empty.",
+        "Media Upload and Image Library allow upload flows (or degrade gracefully if storage/back-end methods are unavailable), and list items with correct grouping/status.",
+        "Pricing & Terms and Price Control pages render and allow saving changes where supported; otherwise show a clear non-crashing placeholder stating the capability is unavailable.",
+        "Member Directory loads and displays user profiles (or shows a clear message if the backend method is unavailable) and supports basic filtering/search UI without crashing.",
+        "Display Screen admin page loads current state and allows setting/updating display content (or degrades gracefully with clear messaging).",
+        "Mall Admin page renders and supports CRUD actions (or degrades gracefully with clear messaging)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/Header.tsx",
+          "path": "frontend/src/hooks/useActorCapabilities.ts",
           "operation": "modify",
-          "description": "Restore/ensure Admin navigation appears for admins on desktop and is equivalently accessible on mobile by rendering all sections/items from `getAdminNavSections()` (derived from `ADMIN_NAV_ITEMS`), and hiding the admin nav entirely for non-admins/logged-out users."
+          "description": "Update the frontend capability mapping to reflect which backend methods exist in the current actor interface, exposing flags that admin pages can use to enable actions or show clear 'capability unavailable' messaging instead of crashing."
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/components/admin/AdminCapabilityNotice.tsx",
+          "operation": "create",
+          "description": "Create a small admin-only helper component used by admin pages to render consistent empty/error/unavailable-capability messaging without throwing. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminMemberDirectoryPage.tsx",
           "operation": "modify",
-          "description": "Harden `useIsCallerAdmin()` behavior for identity changes to avoid stale results (e.g., ensure cache keys/refetch behavior stays principal-specific and returns a boolean without leaking errors into UI)."
+          "description": "Prevent crashes when backend capability is missing (backend interface does not include getAllUserProfiles): use useActorCapabilities to gate the feature and show a clear, non-crashing message; keep basic search/filter UI stable even if results are empty/unavailable. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminAdsPage.tsx",
+          "operation": "modify",
+          "description": "Ensure create/update/delete/toggle-active flows always terminate in a usable state: add safe loading/empty/error UI, handle authorization/capability errors gracefully, and disable or message actions when unsupported rather than dead-ending. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminAffiliatePage.tsx",
+          "operation": "modify",
+          "description": "Ensure tier create/list UX is stable: add safe loading/empty/error states and capability-based fallback messaging when backend support is unavailable. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminInviteLinksPage.tsx",
+          "operation": "modify",
+          "description": "Ensure invite code generation/listing is robust: safe loading/empty/error UI, reliable copy-to-clipboard behavior, and clear messaging on authorization failures without crashes. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminInviteAcceptPage.tsx",
+          "operation": "modify",
+          "description": "Harden /invite/accept flow: handle missing/invalid tokens with clear messaging, avoid infinite loading, and ensure successful acceptance transitions the user to the intended admin flow without runtime errors."
+        },
+        {
+          "path": "frontend/src/pages/AdminApprovalPage.tsx",
+          "operation": "modify",
+          "description": "Ensure approvals dashboard renders with safe loading/empty/error states; actions should either work end-to-end where supported (e.g., user approvals) or be clearly disabled with explanation when unsupported."
+        },
+        {
+          "path": "frontend/src/pages/AdminEditingRoomPage.tsx",
+          "operation": "modify",
+          "description": "Ensure approve/reject/search flows never crash on empty queues or missing capabilities; add capability-based disabling and clear fallback messaging where needed."
+        },
+        {
+          "path": "frontend/src/pages/AdminMediaUploadRoomPage.tsx",
+          "operation": "modify",
+          "description": "Ensure media upload flows and listings do not crash when backend storage/content capabilities are unavailable: gate actions via capabilities, show clear fallback messaging, and keep loading/empty/error UI safe. Where blob rendering is used, use the blob-storage component's direct URL approach (ExternalBlob.getDirectURL) for display and progress handling for uploads. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminImageLibraryPage.tsx",
+          "operation": "modify",
+          "description": "Ensure image upload/approve/reject/list flows degrade gracefully when storage/back-end methods are unavailable: use capabilities gating, safe loading/empty/error UI, and prevent runtime errors when lists are empty or methods throw. Where blob rendering is used, use the blob-storage component's ExternalBlob utilities for direct URLs and upload progress. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminPricingTermsPage.tsx",
+          "operation": "modify",
+          "description": "Ensure Pricing & Terms renders safely with loading/empty/error states; saving must either work end-to-end when supported or show a clear 'capability unavailable' message without crashing."
+        },
+        {
+          "path": "frontend/src/pages/AdminPriceControlRoomPage.tsx",
+          "operation": "modify",
+          "description": "Ensure Price Control renders safely with loading/empty/error states; saving must either work end-to-end when supported or show a clear 'capability unavailable' message without crashing."
+        },
+        {
+          "path": "frontend/src/pages/AdminDisplayPage.tsx",
+          "operation": "modify",
+          "description": "Ensure display admin management has safe loading/empty/error states and capability-based fallback messaging for update actions where backend support is missing."
+        },
+        {
+          "path": "frontend/src/pages/AdminMallPage.tsx",
+          "operation": "modify",
+          "description": "Ensure Mall Admin CRUD UI does not crash and remains usable with clear local-state behavior; if backend persistence is not available, ensure the UI communicates that clearly and never dead-ends on actions."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Confirm the router registers routes for every required admin room and that each route points to an implemented page component that renders without crashing."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Make /admin/rooms a working admin hub that lists navigable rooms sourced from `ADMIN_NAV_ITEMS` and routes to existing AdminRouteGuard-protected admin pages, without any version label displayed.",
+      "summary": "Avoid regressions by keeping existing public and authenticated-user functionality intact and preventing new runtime errors in unrelated areas after admin fixes.",
       "acceptanceCriteria": [
-        "/admin/rooms renders a grid/list of admin rooms sourced from `ADMIN_NAV_ITEMS` (excluding self-link to /admin/rooms).",
-        "The list includes (at minimum) links/cards for: Content Approval & Editing (`/admin/editing-room`), Approvals (`/admin/approvals`), Media Upload (`/admin/media-upload`), Image Library (`/admin/image-library`), and Uploads & Downloads (`/admin/content`).",
-        "Each room card and its “Open Room” control correctly navigates to the specified route.",
-        "No version label/badge is displayed anywhere on the Admin Rooms page."
+        "No new console errors are introduced on core non-admin routes (/, /wallet, /credit-card, /streaming-partners, /hiiyah-chat, /mall, /terms).",
+        "Existing navigation (public and authenticated user navigation) continues to work after admin fixes.",
+        "Admin changes do not break Internet Identity login/logout flow and do not require a page refresh to recover from auth changes."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminRoomsPage.tsx",
+          "path": "frontend/src/components/Header.tsx",
           "operation": "modify",
-          "description": "Ensure the Rooms hub renders its grid exclusively from `ADMIN_NAV_ITEMS` (excluding /admin/rooms), and that both the card click and the “Open Room” control navigate to the correct admin route."
+          "description": "Ensure admin-specific UI logic does not interfere with public/authenticated navigation: keep mobile menu behavior stable, avoid throwing when profile/admin status is unavailable, and ensure login/logout updates reflected without requiring refresh."
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Verify layout-level rendering remains stable across all routes after admin changes (no unintended conditional rendering errors, no new console errors on non-admin pages)."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure query invalidation/caching behavior on login/logout does not break unrelated pages (wallet, credit card, chat, streaming partners, mall, terms); avoid aggressive clears/refetch loops that could cause new console errors."
         },
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Verify all required admin room routes referenced by `ADMIN_NAV_ITEMS` exist in the router and remain wrapped in `AdminRouteGuard` so each room link resolves to a guarded admin page."
+          "description": "Validate route registration changes do not impact core public routes and that admin guard wrapping does not affect non-admin routes; keep /invite/accept accessible as specified."
         }
       ]
     }

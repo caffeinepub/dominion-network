@@ -1,68 +1,99 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Search, Loader2, Users } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useActor } from '../hooks/useActor';
 import { useQuery } from '@tanstack/react-query';
-import type { UserProfile } from '../backend';
-import { Principal } from '@dfinity/principal';
-
-interface UserProfileInfo {
-  principal: Principal;
-  profile: UserProfile;
-}
+import { AdminCapabilityNotice } from '../components/admin/AdminCapabilityNotice';
 
 export function AdminMemberDirectoryPage() {
-  const { actor } = useActor();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const { actor, isFetching: actorFetching } = useActor();
 
-  const { data: userProfiles = [], isLoading } = useQuery<UserProfileInfo[]>({
+  const { data: profiles = [], isLoading, error } = useQuery({
     queryKey: ['allUserProfiles'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      const profiles = await (actor as any).getAllUserProfiles();
-      return profiles;
+      if (!actor) return [];
+      // Check if method exists
+      if (typeof (actor as any).getAllUserProfiles !== 'function') {
+        return [];
+      }
+      try {
+        return await (actor as any).getAllUserProfiles();
+      } catch (error) {
+        console.error('Error fetching user profiles:', error);
+        return [];
+      }
     },
-    enabled: !!actor,
+    enabled: !!actor && !actorFetching,
   });
 
-  const filteredProfiles = userProfiles.filter((userInfo) => {
-    const matchesSearch =
-      userInfo.profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      userInfo.profile.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      userInfo.principal.toString().toLowerCase().includes(searchQuery.toLowerCase());
+  const hasCapability = actor && typeof (actor as any).getAllUserProfiles === 'function';
 
-    const matchesRole = roleFilter === 'all' || userInfo.profile.role === roleFilter;
-
+  const filteredProfiles = profiles.filter((profile: any) => {
+    const matchesSearch = 
+      profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      profile.principal.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = roleFilter === 'all' || profile.role.__kind__.toLowerCase() === roleFilter;
+    
     return matchesSearch && matchesRole;
   });
 
+  if (isLoading || actorFetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!hasCapability) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <AdminCapabilityNotice
+          type="unavailable"
+          message="Member directory is not available in the current backend configuration. The getAllUserProfiles method is not implemented."
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <AdminCapabilityNotice
+          type="error"
+          message="Failed to load member directory. Please try again later."
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
-            <Users className="h-8 w-8" />
-            Member Directory
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            View and manage all registered users ({userProfiles.length} total)
-          </p>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Users className="h-8 w-8" />
+          Member Directory
+        </h1>
+        <p className="text-muted-foreground">View and manage all registered users</p>
       </div>
 
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Search and Filter</CardTitle>
+          <CardTitle>Search & Filter</CardTitle>
           <CardDescription>Find members by name, email, or principal ID</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by name, email, or principal..."
                 value={searchQuery}
@@ -70,51 +101,35 @@ export function AdminMemberDirectoryPage() {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
-              <Badge
-                variant={roleFilter === 'all' ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setRoleFilter('all')}
-              >
-                All
-              </Badge>
-              <Badge
-                variant={roleFilter === 'admin' ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setRoleFilter('admin')}
-              >
-                Admin
-              </Badge>
-              <Badge
-                variant={roleFilter === 'subscriber' ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setRoleFilter('subscriber')}
-              >
-                Subscriber
-              </Badge>
-              <Badge
-                variant={roleFilter === 'member' ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setRoleFilter('member')}
-              >
-                Member
-              </Badge>
-            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="subscriber">Subscriber</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Members ({filteredProfiles.length})</CardTitle>
-          <CardDescription>All registered users in the system</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-center text-muted-foreground py-8">Loading members...</p>
-          ) : filteredProfiles.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No members found</p>
-          ) : (
+      {filteredProfiles.length === 0 ? (
+        <AdminCapabilityNotice
+          type="empty"
+          message={searchQuery || roleFilter !== 'all' 
+            ? "No members found matching your search criteria." 
+            : "No members registered yet."}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Members ({filteredProfiles.length})</CardTitle>
+            <CardDescription>All registered users in the system</CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -127,39 +142,31 @@ export function AdminMemberDirectoryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProfiles.map((userInfo) => (
-                    <TableRow key={userInfo.principal.toString()}>
-                      <TableCell className="font-medium">{userInfo.profile.name}</TableCell>
-                      <TableCell>{userInfo.profile.email}</TableCell>
+                  {filteredProfiles.map((profile: any, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{profile.name}</TableCell>
+                      <TableCell>{profile.email}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            userInfo.profile.role === 'admin'
-                              ? 'default'
-                              : userInfo.profile.role === 'subscriber'
-                              ? 'secondary'
-                              : 'outline'
-                          }
-                        >
-                          {userInfo.profile.role}
+                        <Badge variant={profile.role.__kind__ === 'admin' ? 'default' : 'secondary'}>
+                          {profile.role.__kind__}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={userInfo.profile.isOnline ? 'default' : 'outline'}>
-                          {userInfo.profile.isOnline ? 'Online' : 'Offline'}
+                        <Badge variant={profile.isOnline ? 'default' : 'outline'}>
+                          {profile.isOnline ? 'Online' : 'Offline'}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden lg:table-cell font-mono text-xs">
-                        {userInfo.principal.toString().slice(0, 20)}...
+                        {profile.principal?.toString() || 'N/A'}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

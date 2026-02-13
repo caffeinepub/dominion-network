@@ -1,60 +1,108 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T14:06:51.398Z",
-  "summary": "REQ-4 appears implemented in AdminRoomsPage by rendering cards from ADMIN_NAV_ITEMS (excluding /admin/rooms) with navigation wiring. VersionBadge and APP_VERSION were modified to hide version UI, but another frontend summary indicates HomePage still displays a version label. The backend diff does not show an isCallerAdmin method, and several unrelated frontend features and a migration stub were added/modified without being requested.",
+  "generatedAt": "2026-02-13T21:32:57.491Z",
+  "summary": "Diff implements parts of the admin access guard and several admin pages with safer loading/error states, plus a reusable AdminCapabilityNotice. However, the diff evidence does not show completion of the full required admin room set, invite accept flow, approvals/editing flows, or comprehensive admin navigation verification across all required rooms. The diff also includes multiple unrelated feature changes (Hero, HeroHelper, Wallet/CreditCard, styling/theme, assets/text), which are outside the requested admin restoration scope.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Implement (or restore) a backend canister method `isCallerAdmin` so the frontend hook `useIsCallerAdmin()` can reliably determine whether the logged-in Internet Identity principal is an admin.",
-      "reason": "backend/main.mo is truncated and the diff summary does not show any `isCallerAdmin` method being added/exposed; only imports and type declarations are visible plus migration wiring.",
+      "id": "REQ-1",
+      "requirement": "Header Admin dropdown and /admin/rooms hub must include links to every required admin room; links must match registered routes; navigation usable on desktop/mobile (scrollable).",
+      "reason": "The diff summary claims Header/App changes, but no concrete diff content is provided for Header.tsx/App.tsx/adminNav constants or the /admin/rooms hub UI itself. Also, there is no evidence that the dropdown/hub includes links to *every* required room (approvals, editing, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, mall admin).",
       "evidence": [
-        "backend/main.mo"
+        "frontend-file-summaries.txt (mentions Header.tsx and App.tsx changes but provides no actual link list/paths)",
+        "frontend/src/components/AdminRouteGuard.tsx (guard only; no navigation links)"
       ]
     },
     {
-      "id": "REQ-1",
-      "requirement": "Remove any visible app version label (e.g., \"version 42\") from the UI, including eliminating on-screen usage of APP_VERSION/VersionBadge so end-users never see a version string in the interface.",
-      "reason": "Although VersionBadge was changed to render nothing and APP_VERSION set to an empty string, the diff summary also claims HomePage was updated to display \"Version 42\" using VersionBadge, which would violate the requirement if accurate.",
+      "id": "REQ-2",
+      "requirement": "Every /admin/* route must be guarded; non-admin/logged-out users see existing AdminAccessDenied; admin checks resilient to identity changes without hard refresh.",
+      "reason": "AdminRouteGuard and useAdminStatus improvements are shown, but there is no diff evidence that *every* /admin/* route is wrapped/guarded (router configuration in App.tsx is not shown, only described in a summary).",
       "evidence": [
-        "frontend-file-summaries.txt",
-        "frontend/src/components/VersionBadge.tsx",
-        "frontend/src/constants/appVersion.ts"
+        "frontend/src/components/AdminRouteGuard.tsx",
+        "frontend/src/hooks/useAdminStatus.ts",
+        "frontend-file-summaries.txt (claims App.tsx wraps admin routes, but no code shown)"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "All required admin rooms must be present and routable (approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, mall admin) with safe loading/empty/error states; primary actions work end-to-end where supported (notably invite links accept flow, approvals/editing approve/reject flows, uploads/image library flows, pricing save, display updates, mall CRUD).",
+      "reason": "Only three admin pages are evidenced as modified (AdminAdsPage, AdminAffiliatePage, AdminMemberDirectoryPage). There is no diff evidence of routes/pages for approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, invite links (+ /invite/accept flow), display screen, or mall admin, nor evidence of their required action flows.",
+      "evidence": [
+        "frontend/src/pages/AdminAdsPage.tsx",
+        "frontend/src/pages/AdminAffiliatePage.tsx",
+        "frontend/src/pages/AdminMemberDirectoryPage.tsx",
+        "frontend-file-summaries.txt (does not show implementation for the other required rooms or /invite/accept)"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Prevent regressions: no new console errors on core non-admin routes; existing public/auth navigation continues to work; admin changes do not break Internet Identity login/logout flow and do not require refresh after auth changes.",
+      "reason": "The diff includes broad, unrelated modifications to many non-admin areas (Hero, content components, Footer, Wallet/CreditCard pages, CSS/theme, Tailwind config). The diff summary does not provide evidence of regression testing or guarantees that these changes introduce no new console errors on the listed core routes.",
+      "evidence": [
+        "frontend-file-summaries.txt (lists many non-admin component/page changes unrelated to admin restoration)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added a backend migration module and wired migration into the main actor.",
-      "reason": "The request only allowed adding backend/migration.mo if state migration is truly required; the diff shows a no-op migration stub without evidence that migration is needed for the requested admin detection/menu/version-label fixes.",
+      "description": "Enhanced floating AI assistant (HeroHelper) with click-to-position, full voice capabilities, memory system, background monitoring mode, and “comprehensive platform knowledge”.",
+      "reason": "Not requested; explicitly outside the admin restoration scope and likely a new unrelated product feature.",
       "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
+        "frontend-file-summaries.txt (HeroHelper.tsx description)"
       ]
     },
     {
-      "description": "Homepage updated to display a version badge (\"Version 42\").",
-      "reason": "This is the opposite of REQ-1 (remove any visible version label) and is not part of the requested admin-flow restoration.",
+      "description": "Homepage/Hero marketing changes (badge text update and new people-free background image).",
+      "reason": "Not requested; unrelated to completing/fixing the Admin area.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt (Hero.tsx description)"
       ]
     },
     {
-      "description": "Large set of unrelated UI/product enhancements (Hero changes, content library/player, wallet/credit card features, AI assistant with voice/memory, logos, Tailwind theme changes, etc.).",
-      "reason": "Non-goals explicitly exclude implementing new product features beyond making existing admin pages/menu/rooms visible/functional and removing the version label; these changes are not requested by REQ-1..REQ-4.",
+      "description": "Content library/player expansions (ContentGrid/ContentCard/ContentPlayer with full media playback controls and rating UI).",
+      "reason": "Not requested; outside admin restoration scope.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt (ContentGrid.tsx, ContentCard.tsx, ContentPlayer.tsx descriptions)"
+      ]
+    },
+    {
+      "description": "Footer changes including updated logo and an “admin login button”.",
+      "reason": "Not requested (admin navigation/rooms were requested, not a new footer admin login entry).",
+      "evidence": [
+        "frontend-file-summaries.txt (Footer.tsx description)"
+      ]
+    },
+    {
+      "description": "Global style/theme overhaul (index.css futuristic backgrounds, dropdown behavior changes, Tailwind config theme colors/animations, index.html meta/title updates).",
+      "reason": "Not requested; broad UI/theme changes beyond admin restoration.",
+      "evidence": [
+        "frontend-file-summaries.txt (index.css, tailwind.config.js, index.html descriptions)"
+      ]
+    },
+    {
+      "description": "Wallet page changes claiming “Counterparty mainnet node hosting integration” and “real-time transaction history”.",
+      "reason": "Not requested; explicitly outside admin restoration scope and conflicts with non-goal of adding unrelated product features.",
+      "evidence": [
+        "frontend-file-summaries.txt (WalletPage.tsx description)"
+      ]
+    },
+    {
+      "description": "Credit card page changes (details truncated but indicated as modified).",
+      "reason": "Not requested; outside admin restoration scope.",
+      "evidence": [
+        "frontend-file-summaries.txt (CreditCardPage.tsx entry is present but truncated)"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.64,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/VersionBadge.tsx",
-    "frontend/src/constants/appVersion.ts",
-    "frontend/src/pages/AdminRoomsPage.tsx",
+    "frontend/src/components/AdminRouteGuard.tsx",
+    "frontend/src/components/admin/AdminCapabilityNotice.tsx",
+    "frontend/src/hooks/useAdminStatus.ts",
+    "frontend/src/pages/AdminAdsPage.tsx",
+    "frontend/src/pages/AdminAffiliatePage.tsx",
+    "frontend/src/pages/AdminMemberDirectoryPage.tsx",
     "project_state.json"
   ]
 }

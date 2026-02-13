@@ -6,9 +6,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { useGetCallerUserProfile, useIsCallerAdmin } from '../hooks/useQueries';
+import { useGetCallerUserProfile } from '../hooks/useQueries';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getAdminNavSections } from '../constants/adminNav';
+import { getOrderedAdminNavSections } from '../constants/adminNav';
+import { useAdminStatus } from '../hooks/useAdminStatus';
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,12 +18,10 @@ export function Header() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: userProfile } = useGetCallerUserProfile();
-  const { data: isAdmin, isLoading: isAdminLoading, refetch: refetchAdminStatus } = useIsCallerAdmin();
+  const { canShowAdminUI, refetchAdminStatus } = useAdminStatus();
 
   const isAuthenticated = !!identity;
-  const showAdminMenu = isAuthenticated && isAdmin === true;
-
-  const adminNavSections = getAdminNavSections();
+  const adminNavSections = getOrderedAdminNavSections();
 
   // Refetch admin status when identity changes
   useEffect(() => {
@@ -189,7 +188,7 @@ export function Header() {
             </button>
 
             {/* Admin Dropdown - Desktop */}
-            {showAdminMenu && (
+            {canShowAdminUI && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="text-xs xl:text-sm font-medium text-foreground/80 hover:text-primary transition-colors whitespace-nowrap px-2 py-1 flex items-center gap-1">
@@ -199,7 +198,7 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 max-h-[80vh]">
                   <ScrollArea className="h-full max-h-[70vh]">
-                    {Object.entries(adminNavSections).map(([section, items], sectionIndex, sections) => (
+                    {adminNavSections.map(({ section, items }, sectionIndex) => (
                       <div key={section}>
                         <DropdownMenuLabel className="text-xs font-semibold text-primary/80 px-2 py-1.5">
                           {section}
@@ -217,7 +216,7 @@ export function Header() {
                             </DropdownMenuItem>
                           );
                         })}
-                        {sectionIndex < sections.length - 1 && <DropdownMenuSeparator />}
+                        {sectionIndex < adminNavSections.length - 1 && <DropdownMenuSeparator />}
                       </div>
                     ))}
                   </ScrollArea>
@@ -276,117 +275,111 @@ export function Header() {
             className="lg:hidden p-2 hover:bg-accent rounded-md transition-colors shrink-0"
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-primary/20 py-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
-            <nav className="flex flex-col gap-2">
-              {/* Search - Mobile */}
-              <form onSubmit={handleSearch} className="px-2 pb-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 w-full"
-                  />
-                </div>
-              </form>
+          <div className="lg:hidden border-t border-primary/20 py-4 space-y-4">
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="px-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-10"
+                />
+              </div>
+            </form>
 
+            {/* Mobile Navigation Links */}
+            <nav className="flex flex-col space-y-1 px-2">
               <button
                 onClick={() => {
                   navigate({ to: '/' });
                   setMobileMenuOpen(false);
                 }}
-                className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors"
+                className="text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
               >
                 Home
               </button>
-
               <button
                 onClick={() => {
                   navigate({ to: '/streaming-partners' });
                   setMobileMenuOpen(false);
                 }}
-                className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors"
+                className="text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
               >
                 Streaming Partners
               </button>
 
-              {/* Media Genres - Mobile */}
-              <div className="px-4 py-2">
-                <div className="text-xs font-semibold text-primary/80 mb-2">Browse Genres</div>
-                <div className="flex flex-col gap-1 pl-2">
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/category/$categoryId', params: { categoryId: '1' } });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Film className="h-4 w-4 shrink-0" />
-                    <span>Movies</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/category/$categoryId', params: { categoryId: '2' } });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Music className="h-4 w-4 shrink-0" />
-                    <span>Music</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/category/$categoryId', params: { categoryId: '3' } });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Tv className="h-4 w-4 shrink-0" />
-                    <span>Live TV</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/category/$categoryId', params: { categoryId: '4' } });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Trophy className="h-4 w-4 shrink-0" />
-                    <span>Sports</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/category/$categoryId', params: { categoryId: '5' } });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Laugh className="h-4 w-4 shrink-0" />
-                    <span>Comedy</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/category/$categoryId', params: { categoryId: '6' } });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
-                  >
-                    <Newspaper className="h-4 w-4 shrink-0" />
-                    <span>News</span>
-                  </button>
-                </div>
+              {/* Mobile Media Genres */}
+              <div className="space-y-1">
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">Media Genres</div>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '1' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                >
+                  <Film className="h-4 w-4" />
+                  Movies
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '2' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                >
+                  <Music className="h-4 w-4" />
+                  Music
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '3' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                >
+                  <Tv className="h-4 w-4" />
+                  Live TV
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '4' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                >
+                  <Trophy className="h-4 w-4" />
+                  Sports
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '5' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                >
+                  <Laugh className="h-4 w-4" />
+                  Comedy
+                </button>
+                <button
+                  onClick={() => {
+                    navigate({ to: '/category/$categoryId', params: { categoryId: '6' } });
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                >
+                  <Newspaper className="h-4 w-4" />
+                  News
+                </button>
               </div>
 
               {isAuthenticated && (
@@ -396,40 +389,40 @@ export function Header() {
                       navigate({ to: '/hiiyah-chat' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
                   >
-                    <MessageSquare className="h-4 w-4 shrink-0" />
-                    <span>HiiYah Chat</span>
+                    <MessageSquare className="h-4 w-4" />
+                    HiiYah Chat
                   </button>
                   <button
                     onClick={() => {
                       navigate({ to: '/wallet' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
                   >
-                    <Wallet className="h-4 w-4 shrink-0" />
-                    <span>Excalibur Wallet</span>
+                    <Wallet className="h-4 w-4" />
+                    Excalibur Wallet
                   </button>
                   <button
                     onClick={() => {
                       navigate({ to: '/credit-card' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
                   >
-                    <CreditCard className="h-4 w-4 shrink-0" />
-                    <span>Excalibur Card</span>
+                    <CreditCard className="h-4 w-4" />
+                    Excalibur Card
                   </button>
                   <button
                     onClick={() => {
                       navigate({ to: '/affiliate' });
                       setMobileMenuOpen(false);
                     }}
-                    className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
                   >
-                    <Share2 className="h-4 w-4 shrink-0" />
-                    <span>Affiliate Program</span>
+                    <Share2 className="h-4 w-4" />
+                    Affiliate Program
                   </button>
                 </>
               )}
@@ -439,78 +432,70 @@ export function Header() {
                   navigate({ to: '/mall' });
                   setMobileMenuOpen(false);
                 }}
-                className="text-left px-4 py-2 hover:bg-accent rounded-md transition-colors flex items-center gap-2"
+                className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
               >
-                <ShoppingBag className="h-4 w-4 shrink-0" />
-                <span>Clear Magic Mall</span>
+                <ShoppingBag className="h-4 w-4" />
+                Clear Magic Mall
               </button>
 
-              {/* Admin Section - Mobile */}
-              {showAdminMenu && (
-                <div className="px-4 py-2 border-t border-primary/20 mt-2">
-                  <div className="text-xs font-semibold text-primary/80 mb-2 flex items-center gap-2">
+              {/* Mobile Admin Menu */}
+              {canShowAdminUI && (
+                <div className="space-y-1 pt-2 border-t border-primary/20">
+                  <div className="px-3 py-2 text-xs font-semibold text-primary flex items-center gap-2">
                     <Shield className="h-4 w-4" />
-                    Admin
+                    Admin Panel
                   </div>
-                  <div className="flex flex-col gap-1 pl-2">
-                    {Object.entries(adminNavSections).map(([section, items]) => (
-                      <div key={section} className="mb-3">
-                        <div className="text-xs font-medium text-muted-foreground mb-1 px-2">
-                          {section}
-                        </div>
-                        {items.map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <button
-                              key={item.route}
-                              onClick={() => handleMobileAdminNavClick(item.route)}
-                              className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2 w-full"
-                            >
-                              <Icon className="h-4 w-4 shrink-0" />
-                              <span className="text-sm">{item.label}</span>
-                            </button>
-                          );
-                        })}
+                  {adminNavSections.map(({ section, items }) => (
+                    <div key={section} className="space-y-1">
+                      <div className="px-3 py-1 text-xs font-semibold text-muted-foreground">
+                        {section}
                       </div>
-                    ))}
-                  </div>
+                      {items.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.route}
+                            onClick={() => handleMobileAdminNavClick(item.route)}
+                            className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="break-words">{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
               )}
+            </nav>
 
-              {/* Auth Button - Mobile */}
-              <div className="px-4 py-2 border-t border-primary/20 mt-2">
-                {isAuthenticated ? (
-                  <div className="flex flex-col gap-2">
-                    {userProfile && (
-                      <div className="text-sm text-muted-foreground">
-                        Logged in as: <span className="font-medium">{userProfile.name}</span>
-                      </div>
-                    )}
-                    <Button
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      Logout
-                    </Button>
-                  </div>
-                ) : (
+            {/* Mobile Auth Button */}
+            <div className="px-2 pt-2 border-t border-primary/20">
+              {isAuthenticated ? (
+                <div className="space-y-2">
+                  {userProfile && (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      Logged in as: <span className="font-medium text-foreground">{userProfile.name}</span>
+                    </div>
+                  )}
                   <Button
-                    onClick={() => {
-                      handleLogin();
-                      setMobileMenuOpen(false);
-                    }}
-                    disabled={isLoggingIn}
+                    onClick={handleLogout}
+                    variant="outline"
                     className="w-full"
                   >
-                    {isLoggingIn ? 'Logging in...' : 'Login'}
+                    Logout
                   </Button>
-                )}
-              </div>
-            </nav>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleLogin}
+                  disabled={isLoggingIn}
+                  className="w-full"
+                >
+                  {isLoggingIn ? 'Logging in...' : 'Login'}
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>

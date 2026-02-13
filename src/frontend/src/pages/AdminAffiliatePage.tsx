@@ -1,136 +1,165 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useGetAllAffiliateTiers, useCreateAffiliateTier } from '../hooks/useQueries';
-import { Loader2, Plus, TrendingUp } from 'lucide-react';
+import { AdminCapabilityNotice } from '../components/admin/AdminCapabilityNotice';
 import { toast } from 'sonner';
 
 export function AdminAffiliatePage() {
-  const { data: tiers = [], isLoading } = useGetAllAffiliateTiers();
-  const createTier = useCreateAffiliateTier();
-
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     commissionRate: '',
     minReferrals: '',
   });
 
+  const { data: tiers = [], isLoading, error } = useGetAllAffiliateTiers();
+  const createTier = useCreateAffiliateTier();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createTier.mutateAsync({
         name: formData.name,
-        commissionRate: BigInt(formData.commissionRate),
-        minReferrals: BigInt(formData.minReferrals),
+        commissionRate: parseInt(formData.commissionRate),
+        minReferrals: parseInt(formData.minReferrals),
       });
-      setFormData({
-        name: '',
-        commissionRate: '',
-        minReferrals: '',
-      });
-    } catch (error) {
-      console.error('Failed to create tier:', error);
+      setIsCreateDialogOpen(false);
+      setFormData({ name: '', commissionRate: '', minReferrals: '' });
+    } catch (error: any) {
+      console.error('Error creating tier:', error);
+      toast.error('Failed to create affiliate tier');
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <AdminCapabilityNotice
+          type="error"
+          message="Failed to load affiliate tiers. Please try again later."
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="container py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold gradient-text mb-2">Affiliate Program Management</h1>
-        <p className="text-muted-foreground">Configure commission tiers and manage affiliate program settings</p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Affiliate Program Management</h1>
+          <p className="text-muted-foreground">Create and manage commission tiers for affiliates</p>
+        </div>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Tier
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Affiliate Tier</DialogTitle>
+              <DialogDescription>
+                Define a new commission tier for your affiliate program.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Tier Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Bronze, Silver, Gold"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="commissionRate">Commission Rate (%)</Label>
+                  <Input
+                    id="commissionRate"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.commissionRate}
+                    onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="minReferrals">Minimum Referrals</Label>
+                  <Input
+                    id="minReferrals"
+                    type="number"
+                    min="0"
+                    value={formData.minReferrals}
+                    onChange={(e) => setFormData({ ...formData, minReferrals: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createTier.isPending}>
+                  {createTier.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Create Tier
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Create New Tier
-          </CardTitle>
-          <CardDescription>Add a new commission tier for affiliates</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Tier Name</Label>
-              <Input
-                id="name"
-                placeholder="e.g., Bronze, Silver, Gold"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="commissionRate">Commission Rate (%)</Label>
-                <Input
-                  id="commissionRate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="e.g., 10"
-                  value={formData.commissionRate}
-                  onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="minReferrals">Minimum Referrals</Label>
-                <Input
-                  id="minReferrals"
-                  type="number"
-                  min="0"
-                  placeholder="e.g., 5"
-                  value={formData.minReferrals}
-                  onChange={(e) => setFormData({ ...formData, minReferrals: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-
-            <Button type="submit" disabled={createTier.isPending}>
-              {createTier.isPending ? 'Creating...' : 'Create Tier'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Commission Tiers</CardTitle>
-          <CardDescription>All configured affiliate commission tiers</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : tiers.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No tiers configured yet</p>
-          ) : (
-            <div className="space-y-4">
-              {tiers.map((tier) => (
-                <div key={tier.id.toString()} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-primary" />
-                      {tier.name}
-                    </h3>
-                    <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                      <span>Commission: {Number(tier.commissionRate)}%</span>
-                      <span>Min Referrals: {Number(tier.minReferrals)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {tiers.length === 0 ? (
+        <AdminCapabilityNotice
+          type="empty"
+          message="No affiliate tiers found. Create your first tier to get started with the affiliate program."
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Affiliate Tiers</CardTitle>
+            <CardDescription>Manage commission rates and requirements for each tier</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tier Name</TableHead>
+                  <TableHead>Commission Rate</TableHead>
+                  <TableHead>Minimum Referrals</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tiers.map((tier: any) => (
+                  <TableRow key={tier.id}>
+                    <TableCell className="font-medium">{tier.name}</TableCell>
+                    <TableCell>{Number(tier.commissionRate)}%</TableCell>
+                    <TableCell>{Number(tier.minReferrals)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

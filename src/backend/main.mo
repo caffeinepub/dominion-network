@@ -10,9 +10,7 @@ import Stripe "stripe/Stripe";
 import StripeMixin "stripe/StripeMixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import InviteLinksModule "invite-links/invite-links-module";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -423,6 +421,7 @@ actor {
 
   var initialized = false;
 
+  // User Profile Management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can access profiles");
@@ -444,6 +443,7 @@ actor {
     userProfiles.add(caller, profile);
   };
 
+  // User Approval System
   public query ({ caller }) func isCallerApproved() : async Bool {
     AccessControl.hasPermission(accessControlState, caller, #admin) or UserApproval.isApproved(userApprovalState, caller);
   };
@@ -466,6 +466,7 @@ actor {
     UserApproval.listApprovals(userApprovalState);
   };
 
+  // Invite Code Management (Admin only)
   public shared ({ caller }) func generateInviteCode() : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can generate invite codes");
