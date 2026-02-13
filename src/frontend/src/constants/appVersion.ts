@@ -1,2 +1,2 @@
-// Single source of truth for the application version label
-export const APP_VERSION = 'Version 42';
+// Application version constant - not displayed in UI
+export const APP_VERSION = '';

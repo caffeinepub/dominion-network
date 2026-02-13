@@ -1,52 +1,70 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T21:27:59.257Z",
+  "generatedAt": "2026-02-12T14:06:51.402Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
+    "total": 4,
     "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Audit the set of requested admin \"rooms\" against the currently registered admin routes and admin navigation items, and add any missing rooms so that every requested room is reachable via a working route and visible in the Admin menu without breaking existing room routes.",
+        "summary": "Remove any visible app version label (e.g., \"version 42\") from the UI, including removing the `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen usage of `APP_VERSION`/`VersionBadge` so end-users never see a version string in the interface.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/constants/adminNav.ts",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/AdminRoomsPage.tsx",
+          "frontend/src/components/VersionBadge.tsx",
+          "frontend/src/constants/appVersion.ts"
         ],
         "matchedFiles": [
-          "frontend/src/constants/adminNav.ts",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/AdminRoomsPage.tsx",
+          "frontend/src/components/VersionBadge.tsx",
+          "frontend/src/constants/appVersion.ts"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "If there is no dedicated \"Rooms\" landing page for admins, add an admin-access-guarded page at `/admin/rooms` that shows a responsive grid/list of cards linking to each admin room (using the admin nav items as the source of truth) so admins can access all rooms from one place.",
+        "summary": "Implement (or restore) a backend canister method `isCallerAdmin` so the frontend hook `useIsCallerAdmin()` can reliably determine whether the logged-in Internet Identity principal is an admin.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Ensure the admin navigation experience is fully functional for authenticated admins: the Header must reliably show the Admin dropdown for admin users after Internet Identity login (desktop) and provide equivalent access on mobile, with all items coming from the admin navigation source (`getAdminNavSections()` / `ADMIN_NAV_ITEMS`).",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/components/Header.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Make the Admin Rooms hub a working “admin flow” entry point: `/admin/rooms` must list navigable rooms/links for editing, approvals, and uploads (and the rest of admin options), and each card/button must route to an existing admin page guarded by `AdminRouteGuard`.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/AdminRoomsPage.tsx",
-          "frontend/src/constants/adminNav.ts",
           "frontend/src/App.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AdminRoomsPage.tsx",
-          "frontend/src/constants/adminNav.ts",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/AdminRoomsPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/constants/adminNav.ts",
+    "frontend/src/components/VersionBadge.tsx",
+    "frontend/src/constants/appVersion.ts",
     "frontend/src/pages/AdminRoomsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Menu, X, Wallet, CreditCard, Share2, Shield, ShoppingBag, Film, Music, Trophy, Laugh, Newspaper, Tv, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,12 +17,19 @@ export function Header() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: userProfile } = useGetCallerUserProfile();
-  const { data: isAdmin, isLoading: isAdminLoading } = useIsCallerAdmin();
+  const { data: isAdmin, isLoading: isAdminLoading, refetch: refetchAdminStatus } = useIsCallerAdmin();
 
   const isAuthenticated = !!identity;
-  const showAdminMenu = isAuthenticated && isAdmin === true && !isAdminLoading;
+  const showAdminMenu = isAuthenticated && isAdmin === true;
 
   const adminNavSections = getAdminNavSections();
+
+  // Refetch admin status when identity changes
+  useEffect(() => {
+    if (identity) {
+      refetchAdminStatus();
+    }
+  }, [identity, refetchAdminStatus]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +47,10 @@ export function Header() {
   const handleLogin = async () => {
     try {
       await login();
+      // Refetch admin status after successful login
+      setTimeout(() => {
+        refetchAdminStatus();
+      }, 500);
     } catch (error: any) {
       console.error('Login error:', error);
       if (error.message === 'User is already authenticated') {
@@ -439,46 +450,47 @@ export function Header() {
                 <div className="px-4 py-2 border-t border-primary/20 mt-2">
                   <div className="text-xs font-semibold text-primary/80 mb-2 flex items-center gap-2">
                     <Shield className="h-4 w-4" />
-                    Admin Menu
+                    Admin
                   </div>
-                  <ScrollArea className="max-h-[50vh]">
-                    <div className="flex flex-col gap-1 pl-2">
-                      {Object.entries(adminNavSections).map(([section, items]) => (
-                        <div key={section} className="mb-3">
-                          <div className="text-xs font-semibold text-primary/60 mb-1.5 px-2">
-                            {section}
-                          </div>
-                          {items.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                              <button
-                                key={item.route}
-                                onClick={() => handleMobileAdminNavClick(item.route)}
-                                className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2 w-full"
-                              >
-                                <Icon className="h-4 w-4 shrink-0" />
-                                <span className="text-sm break-words">{item.label}</span>
-                              </button>
-                            );
-                          })}
+                  <div className="flex flex-col gap-1 pl-2">
+                    {Object.entries(adminNavSections).map(([section, items]) => (
+                      <div key={section} className="mb-3">
+                        <div className="text-xs font-medium text-muted-foreground mb-1 px-2">
+                          {section}
                         </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                        {items.map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.route}
+                              onClick={() => handleMobileAdminNavClick(item.route)}
+                              className="text-left px-2 py-1.5 hover:bg-accent rounded-md transition-colors flex items-center gap-2 w-full"
+                            >
+                              <Icon className="h-4 w-4 shrink-0" />
+                              <span className="text-sm">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {/* Auth - Mobile */}
+              {/* Auth Button - Mobile */}
               <div className="px-4 py-2 border-t border-primary/20 mt-2">
                 {isAuthenticated ? (
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-2">
                     {userProfile && (
-                      <div className="text-sm text-muted-foreground px-2">
-                        Logged in as: <span className="font-semibold">{userProfile.name}</span>
+                      <div className="text-sm text-muted-foreground">
+                        Logged in as: <span className="font-medium">{userProfile.name}</span>
                       </div>
                     )}
                     <Button
-                      onClick={handleLogout}
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
                       variant="outline"
                       className="w-full"
                     >
@@ -487,7 +499,10 @@ export function Header() {
                   </div>
                 ) : (
                   <Button
-                    onClick={handleLogin}
+                    onClick={() => {
+                      handleLogin();
+                      setMobileMenuOpen(false);
+                    }}
                     disabled={isLoggingIn}
                     className="w-full"
                   >

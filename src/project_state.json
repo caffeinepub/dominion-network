@@ -1,27 +1,26 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Admin system deployed with full admin menu/routes and Internet Identity login; user requests adding any missing requested rooms.",
-  "architectural_notes": [
-    "Admin login uses Internet Identity.",
-    "All admin routes are guarded with AdminRouteGuard (full admin access)."
+  "summary": "Build an admin version of the app with a functional admin menu (rooms and links for editing, approvals, and uploads) and remove any visible version label from the UI.",
+  "architectural_notes": [],
+  "known_issues": [
+    "Deployed build/UI is showing incorrect version label and admin menu is not appearing as expected."
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-audit-the-set-of-requested-admin-rooms-against-the-currently-registered-admin-routes-and-admin-navigation-items-and-add-any-missing-rooms-so-that-every-requested-room-is-reachable-via-a-working-route-and-visible-in-the-admin-menu-without-breaking-existing-room-routes",
-      "title": "Audit the set of requested admin \"rooms\" against the currently registered admin routes and admin navigation items, and add any missing rooms so that every requested room is reachable via a working route and visible in the Admin menu without breaking existing room routes.",
+      "id": "feature-remove-any-visible-app-version-label-e-g-version-42-from-the-ui-including-removing-the-versionbadge-from-adminroomspage-and-eliminating-any-other-on-screen-usage-of-app-version-versionbadge-so-end-users-never-see-a-version-string-in-the-interface",
+      "title": "Remove any visible app version label (e.g., \"version 42\") from the UI, including removing the `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen usage of `APP_VERSION`/`VersionBadge` so end-users never see a version string in the interface.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-if-there-is-no-dedicated-rooms-landing-page-for-admins-add-an-admin-access-guarded-page-at-admin-rooms-that-shows-a-responsive-grid-list-of-cards-linking-to-each-admin-room-using-the-admin-nav-items-as-the-source-of-truth-so-admins-can-access-all-rooms-from-one-place",
-      "title": "If there is no dedicated \"Rooms\" landing page for admins, add an admin-access-guarded page at `/admin/rooms` that shows a responsive grid/list of cards linking to each admin room (using the admin nav items as the source of truth) so admins can access all rooms from one place.",
+      "id": "feature-make-the-admin-rooms-hub-a-working-admin-flow-entry-point-admin-rooms-must-list-navigable-rooms-links-for-editing-approvals-and-uploads-and-the-rest-of-admin-options-and-each-card-button-must-route-to-an-existing-admin-page-guarded-by-adminrouteguard",
+      "title": "Make the Admin Rooms hub a working “admin flow” entry point: `/admin/rooms` must list navigable rooms/links for editing, approvals, and uploads (and the rest of admin options), and each card/button must route to an existing admin page guarded by `AdminRouteGuard`.",
       "reqIds": [
-        "REQ-2"
+        "REQ-4"
       ],
       "version": 1
     }
@@ -29,12 +28,34 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add any missing requested rooms (expand rooms list to match all requested rooms)",
+      "summary": "Remove/hide displayed app version label (e.g., showing \"version 42\") from the UI.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Implement full admin menu/UI with rooms and links for editing, approvals, and uploads, all live and functional with full admin access.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Implement (or restore) a backend canister method `isCallerAdmin` so the frontend hook `useIsCallerAdmin()` can reliably determine whether the logged-in Internet Identity principal is an admin.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Ensure the admin navigation experience is fully functional for authenticated admins: the Header must reliably show the Admin dropdown for admin users after Internet Identity login (desktop) and provide equivalent access on mobile, with all items coming from the admin navigation source (`getAdminNavSections()` / `ADMIN_NAV_ITEMS`).",
+      "reqIds": [
+        "REQ-3"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Add missing requested rooms to the admin area",
+  "projectName": "Restore functional admin flow: enable admin detection, show full admin menu/rooms, and remove visible version label",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

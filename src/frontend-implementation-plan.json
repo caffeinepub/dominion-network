@@ -1,52 +1,75 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Ensure all requested admin rooms exist and add /admin/rooms landing page",
+  "title": "Restore functional admin flow: enable admin detection, show full admin menu/rooms, and remove visible version label",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Audit requested admin rooms vs registered routes and admin nav; add missing admin rooms with working routes and visible Admin menu items, plus an in-code route mapping list.",
+      "summary": "Remove all visible app version UI so no page renders a version label/badge (including removing VersionBadge from Admin Rooms).",
       "acceptanceCriteria": [
-        "A documented list exists in code (or in the PR description) mapping each requested room name to its route.",
-        "Every requested room has a corresponding route registered in `frontend/src/App.tsx` and an entry in `frontend/src/constants/adminNav.ts` (unless explicitly noted as intentionally excluded).",
-        "Navigating to each requested room route renders a page (not a blank screen) and does not throw console errors."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/constants/adminNav.ts",
-          "operation": "modify",
-          "description": "Add/verify the complete set of requested admin rooms as `ADMIN_NAV_ITEMS` entries (Admin menu source of truth) and add an exported in-code mapping list (e.g., `REQUESTED_ADMIN_ROOMS_ROUTE_MAP` or similar) that maps each requested room label to its route. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Audit admin route registrations against the requested admin rooms list and add any missing admin routes, ensuring each admin page is wrapped in `AdminRouteGuard` and existing routes remain unchanged. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Add an admin-guarded '/admin/rooms' landing page that lists all admin rooms from adminNav as responsive link cards and is accessible from the Admin menu.",
-      "acceptanceCriteria": [
-        "`/admin/rooms` exists, is wrapped by `AdminRouteGuard`, and is accessible from the Admin menu.",
-        "The page lists all admin room links derived from `frontend/src/constants/adminNav.ts` (label + icon + route), and each link navigates correctly.",
-        "Layout is responsive (mobile + desktop) with no overlapping text/images and no horizontal overflow."
+        "Navigating to /admin/rooms does not show `VersionBadge` and no version text appears in the header/content/footer of that page.",
+        "No page in the app renders a visible version label or badge (e.g., \"version 42\"), including after login and on both desktop and mobile breakpoints.",
+        "Removing the version label does not break layout or navigation."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminRoomsPage.tsx",
-          "operation": "create",
-          "description": "Create the Rooms landing page UI at `/admin/rooms` that renders a responsive grid/list of clickable cards sourced from `ADMIN_NAV_ITEMS` (or `getOrderedAdminNavSections()`), showing each item’s icon + label and navigating to its route; exclude the `/admin/rooms` item itself from the rendered list to avoid self-linking. Compose existing shadcn-ui primitives (e.g., Card/Button/ScrollArea) without editing `frontend/src/components/ui/*`. Verify the component's usage instructions before implementing."
+          "operation": "modify",
+          "description": "Remove the `VersionBadge` import and render from the Admin Rooms page header so no version string is visible on /admin/rooms."
         },
         {
-          "path": "frontend/src/constants/adminNav.ts",
+          "path": "frontend/src/components/VersionBadge.tsx",
           "operation": "modify",
-          "description": "Add an Admin menu item for the new Rooms landing page (label like 'Rooms', route `/admin/rooms`, icon, section, order) so it is visible in the Admin dropdown menu and usable as the entrypoint to all rooms. Verify the component's usage instructions before implementing."
+          "description": "Change `VersionBadge` to render nothing (or otherwise be non-visible) to ensure no accidental usage anywhere in the UI can display a version label. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/constants/appVersion.ts",
+          "operation": "modify",
+          "description": "Remove or neutralize the exported `APP_VERSION` label (and any intended UI usage expectations) so it cannot be displayed to end-users."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Ensure authenticated admins reliably see the full Admin navigation (desktop and mobile) sourced from `getAdminNavSections()` / `ADMIN_NAV_ITEMS`, while non-admins never see it and remain blocked by `AdminRouteGuard`.",
+      "acceptanceCriteria": [
+        "When logged in as an admin, the Header renders an Admin entry (desktop) and the admin navigation is accessible on mobile as well.",
+        "Admin navigation items are derived from `getAdminNavSections()` / `ADMIN_NAV_ITEMS` and are not missing/hidden for admins.",
+        "Clicking any Admin navigation item navigates to its route and renders the corresponding admin page (or an admin-guarded denial only when not an admin).",
+        "When logged in as a non-admin (or logged out), the Admin navigation is not shown and admin routes render the access denied UI via `AdminRouteGuard`."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Restore/ensure Admin navigation appears for admins on desktop and is equivalently accessible on mobile by rendering all sections/items from `getAdminNavSections()` (derived from `ADMIN_NAV_ITEMS`), and hiding the admin nav entirely for non-admins/logged-out users."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Harden `useIsCallerAdmin()` behavior for identity changes to avoid stale results (e.g., ensure cache keys/refetch behavior stays principal-specific and returns a boolean without leaking errors into UI)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Make /admin/rooms a working admin hub that lists navigable rooms sourced from `ADMIN_NAV_ITEMS` and routes to existing AdminRouteGuard-protected admin pages, without any version label displayed.",
+      "acceptanceCriteria": [
+        "/admin/rooms renders a grid/list of admin rooms sourced from `ADMIN_NAV_ITEMS` (excluding self-link to /admin/rooms).",
+        "The list includes (at minimum) links/cards for: Content Approval & Editing (`/admin/editing-room`), Approvals (`/admin/approvals`), Media Upload (`/admin/media-upload`), Image Library (`/admin/image-library`), and Uploads & Downloads (`/admin/content`).",
+        "Each room card and its “Open Room” control correctly navigates to the specified route.",
+        "No version label/badge is displayed anywhere on the Admin Rooms page."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminRoomsPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the Rooms hub renders its grid exclusively from `ADMIN_NAV_ITEMS` (excluding /admin/rooms), and that both the card click and the “Open Room” control navigate to the correct admin route."
         },
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Register the `/admin/rooms` route in the router and wrap it with `AdminRouteGuard`, wiring it to `AdminRoomsPage` so navigating to `/admin/rooms` renders the landing page. Verify the component's usage instructions before implementing."
+          "description": "Verify all required admin room routes referenced by `ADMIN_NAV_ITEMS` exist in the router and remain wrapped in `AdminRouteGuard` so each room link resolves to a guarded admin page."
         }
       ]
     }

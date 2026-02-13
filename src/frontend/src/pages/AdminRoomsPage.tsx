@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ADMIN_NAV_ITEMS } from '@/constants/adminNav';
-import { VersionBadge } from '@/components/VersionBadge';
 
 export function AdminRoomsPage() {
   const navigate = useNavigate();
@@ -14,12 +13,9 @@ export function AdminRoomsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Admin Rooms</h1>
-            <p className="text-slate-300">Access all administrative areas and management tools</p>
-          </div>
-          <VersionBadge />
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">Admin Rooms</h1>
+          <p className="text-slate-300">Access all administrative areas and management tools</p>
         </div>
 
         <ScrollArea className="h-[calc(100vh-200px)]">

@@ -2,11 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-audit-the-set-of-requested-admin-rooms-against-the-currently-registered-admin-routes-and-admin-navigation-items-and-add-any-missing-rooms-so-that-every-requested-room-is-reachable-via-a-working-route-and-visible-in-the-admin-menu-without-breaking-existing-room-routes",
-      "featureTitle": "Audit the set of requested admin \"rooms\" against the currently registered admin routes and admin navigation items, and add any missing rooms so that every requested room is reachable via a working route and visible in the Admin menu without breaking existing room routes.",
+      "featureId": "feature-remove-any-visible-app-version-label-e-g-version-42-from-the-ui-including-removing-the-versionbadge-from-adminroomspage-and-eliminating-any-other-on-screen-usage-of-app-version-versionbadge-so-end-users-never-see-a-version-string-in-the-interface",
+      "featureTitle": "Remove any visible app version label (e.g., \"version 42\") from the UI, including removing the `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen usage of `APP_VERSION`/`VersionBadge` so end-users never see a version string in the interface.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/constants/adminNav.ts"
+        "frontend/src/components/VersionBadge.tsx",
+        "frontend/src/constants/appVersion.ts",
+        "frontend/src/pages/AdminRoomsPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -27,11 +28,9 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-if-there-is-no-dedicated-rooms-landing-page-for-admins-add-an-admin-access-guarded-page-at-admin-rooms-that-shows-a-responsive-grid-list-of-cards-linking-to-each-admin-room-using-the-admin-nav-items-as-the-source-of-truth-so-admins-can-access-all-rooms-from-one-place",
-      "featureTitle": "If there is no dedicated \"Rooms\" landing page for admins, add an admin-access-guarded page at `/admin/rooms` that shows a responsive grid/list of cards linking to each admin room (using the admin nav items as the source of truth) so admins can access all rooms from one place.",
+      "featureId": "feature-make-the-admin-rooms-hub-a-working-admin-flow-entry-point-admin-rooms-must-list-navigable-rooms-links-for-editing-approvals-and-uploads-and-the-rest-of-admin-options-and-each-card-button-must-route-to-an-existing-admin-page-guarded-by-adminrouteguard",
+      "featureTitle": "Make the Admin Rooms hub a working “admin flow” entry point: `/admin/rooms` must list navigable rooms/links for editing, approvals, and uploads (and the rest of admin options), and each card/button must route to an existing admin page guarded by `AdminRouteGuard`.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/constants/adminNav.ts",
         "frontend/src/pages/AdminRoomsPage.tsx"
       ],
       "components": [
@@ -48,7 +47,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-4"
       ],
       "confidence": "high"
     }

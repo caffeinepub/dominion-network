@@ -1,67 +1,103 @@
 {
   "kind": "build_request",
-  "title": "Add missing requested rooms to the admin area",
-  "priority": "normal",
+  "title": "Restore functional admin flow: enable admin detection, show full admin menu/rooms, and remove visible version label",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Audit the set of requested admin \"rooms\" against the currently registered admin routes and admin navigation items, and add any missing rooms so that every requested room is reachable via a working route and visible in the Admin menu without breaking existing room routes.",
+      "text": "Remove any visible app version label (e.g., \"version 42\") from the UI, including removing the `VersionBadge` from `AdminRoomsPage` and eliminating any other on-screen usage of `APP_VERSION`/`VersionBadge` so end-users never see a version string in the interface.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-messages-4",
+          "recent-messages-8"
         ],
         "quotes": [
-          "Add more rooms if any rooms requested are missing."
+          "It just says version 42. I do not want it to show the version",
+          "Remove/hide displayed app version label (e.g., showing \"version 42\") from the UI."
         ]
       },
       "acceptanceCriteria": [
-        "A documented list exists in code (or in the PR description) mapping each requested room name to its route.",
-        "Every requested room has a corresponding route registered in `frontend/src/App.tsx` and an entry in `frontend/src/constants/adminNav.ts` (unless explicitly noted as intentionally excluded).",
-        "Navigating to each requested room route renders a page (not a blank screen) and does not throw console errors."
+        "Navigating to /admin/rooms does not show `VersionBadge` and no version text appears in the header/content/footer of that page.",
+        "No page in the app renders a visible version label or badge (e.g., \"version 42\"), including after login and on both desktop and mobile breakpoints.",
+        "Removing the version label does not break layout or navigation."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "If there is no dedicated \"Rooms\" landing page for admins, add an admin-access-guarded page at `/admin/rooms` that shows a responsive grid/list of cards linking to each admin room (using the admin nav items as the source of truth) so admins can access all rooms from one place.",
-      "target": "frontend",
+      "text": "Implement (or restore) a backend canister method `isCallerAdmin` so the frontend hook `useIsCallerAdmin()` can reliably determine whether the logged-in Internet Identity principal is an admin.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-messages-4",
+          "project_state.json"
         ],
         "quotes": [
-          "Add more rooms if any rooms requested are missing."
+          "Make sure all admin options are live and functional with full admin access.",
+          "Implement (or restore) the backend method `isCallerAdmin` so the frontend’s `useIsCallerAdmin()` query can accurately determine admin status for the logged-in principal."
         ]
       },
       "acceptanceCriteria": [
-        "`/admin/rooms` exists, is wrapped by `AdminRouteGuard`, and is accessible from the Admin menu.",
-        "The page lists all admin room links derived from `frontend/src/constants/adminNav.ts` (label + icon + route), and each link navigates correctly.",
-        "Layout is responsive (mobile + desktop) with no overlapping text/images and no horizontal overflow."
+        "The backend exposes an `isCallerAdmin` method that returns `true` for principals that are admins per the canister’s access control state and `false` otherwise.",
+        "After deploying, a principal that is an admin receives `true` from `actor.isCallerAdmin()` when called from the frontend.",
+        "The method does not trap for authenticated users; it returns a boolean result."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Ensure the admin navigation experience is fully functional for authenticated admins: the Header must reliably show the Admin dropdown for admin users after Internet Identity login (desktop) and provide equivalent access on mobile, with all items coming from the admin navigation source (`getAdminNavSections()` / `ADMIN_NAV_ITEMS`).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4",
+          "project_state.json"
+        ],
+        "quotes": [
+          "I want it to show the admin version that has rooms and links for editing, approvals and uploads as requested.",
+          "Admin menu is not showing up in the deployed draft app (v53), blocking admin access to admin options."
+        ]
+      },
+      "acceptanceCriteria": [
+        "When logged in as an admin, the Header renders an Admin entry (desktop) and the admin navigation is accessible on mobile as well.",
+        "Admin navigation items are derived from `getAdminNavSections()` / `ADMIN_NAV_ITEMS` and are not missing/hidden for admins.",
+        "Clicking any Admin navigation item navigates to its route and renders the corresponding admin page (or an admin-guarded denial only when not an admin).",
+        "When logged in as a non-admin (or logged out), the Admin navigation is not shown and admin routes render the access denied UI via `AdminRouteGuard`."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Make the Admin Rooms hub a working “admin flow” entry point: `/admin/rooms` must list navigable rooms/links for editing, approvals, and uploads (and the rest of admin options), and each card/button must route to an existing admin page guarded by `AdminRouteGuard`.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-4",
+          "recent-messages-8"
+        ],
+        "quotes": [
+          "I want it to show the admin version that has rooms and links for editing, approvals and uploads as requested.",
+          "Implement full admin menu/UI with rooms and links for editing, approvals, and uploads, all live and functional with full admin access."
+        ]
+      },
+      "acceptanceCriteria": [
+        "/admin/rooms renders a grid/list of admin rooms sourced from `ADMIN_NAV_ITEMS` (excluding self-link to /admin/rooms).",
+        "The list includes (at minimum) links/cards for: Content Approval & Editing (`/admin/editing-room`), Approvals (`/admin/approvals`), Media Upload (`/admin/media-upload`), Image Library (`/admin/image-library`), and Uploads & Downloads (`/admin/content`).",
+        "Each room card and its “Open Room” control correctly navigates to the specified route.",
+        "No version label/badge is displayed anywhere on the Admin Rooms page."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under `frontend/src/components/ui` (compose existing UI components only).",
-    "Do not modify immutable hook files: `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`.",
-    "Keep backend architecture as a single Motoko actor; do not add additional canisters."
+    "Frontend must not modify any files under `frontend/src/components/ui` or other immutable paths listed in SYSTEM_CONTEXT.",
+    "Backend must remain a single Motoko actor in `backend/main.mo`; only add `backend/migration.mo` if state migration is truly required.",
+    "Use English for all user-facing text."
   ],
   "nonGoals": [
-    "Adding new backend data models or persistence for rooms.",
-    "Implementing real-time features (e.g., WebSockets) for rooms.",
-    "Adding third-party authentication beyond Internet Identity."
+    "Adding third-party authentication providers (only Internet Identity is supported).",
+    "Adding external databases or non-Motoko backend services.",
+    "Implementing new admin product features beyond making the already-present admin pages/menu/rooms visible and functional and removing the version label."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

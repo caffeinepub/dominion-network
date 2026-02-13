@@ -10,7 +10,9 @@ import Stripe "stripe/Stripe";
 import StripeMixin "stripe/StripeMixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import InviteLinksModule "invite-links/invite-links-module";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 

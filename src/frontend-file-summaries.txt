@@ -1,7 +1,7 @@
 {
   "frontend/src/App.tsx": "Main application component with TanStack Router setup including new /admin/rooms route wrapped with AdminRouteGuard, all admin routes properly registered and accessible.",
-  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations with principal-aware queryKeys for isCallerAdmin and getCallerUserProfile to prevent stale cache across identity changes, includes backward-compatible aliases (useApproveContentSubmission, useRejectContentSubmission) and placeholder useApproveAllPendingItems hook, with proper method availability checks and consistent error handling.",
-  "frontend/src/components/Header.tsx": "Responsive navigation header with admin dropdown menu fully driven by adminNav constants, proper section ordering, Approvals visibility guaranteed in both desktop and mobile admin menus, and improved mobile admin section scrolling.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations with improved useIsCallerAdmin that properly handles identity changes, removes stale cache, and refetches admin status on login with proper error handling and retry logic.",
+  "frontend/src/components/Header.tsx": "Responsive navigation header with admin dropdown menu fully driven by adminNav constants, proper section ordering, refetch mechanism for admin status on login/identity change, and complete mobile/desktop parity for admin menu visibility.",
   "frontend/src/components/Hero.tsx": "Hero section with updated badge displaying \"Streaming to 134 Countries Worldwide\", using verified people-free background image \"homepage-hero-v40-people-free.dim_1920x1080.png\", maintaining futuristic theater aesthetic without human elements.",
   "frontend/src/components/ContentGrid.tsx": "Content library component with tabs for all content and popular content, grid layout, loading states, and content player integration using types from backend-extended.",
   "frontend/src/components/ContentCard.tsx": "Reusable card component displaying media content with thumbnail, title, description, duration, views, rating, and hover effects using types from backend-extended.",
@@ -56,7 +56,7 @@
   "frontend/src/components/AdminAccessDenied.tsx": "Unauthorized access screen component for non-admin users attempting to access admin routes, with clear messaging and navigation back to home.",
   "frontend/src/hooks/useActorCapabilities.ts": "Hook for detecting which backend methods are available on the actor, enabling conditional UI rendering based on backend capabilities with comprehensive coverage of all admin moderation actions.",
   "frontend/src/constants/adminNav.ts": "Centralized admin navigation configuration with exported SECTION_ORDER array, deterministic section/item ordering functions, REQUESTED_ADMIN_ROOMS_ROUTE_MAP for documentation, and new \"Rooms\" landing page entry in Admin Rooms section with LayoutGrid icon.",
-  "frontend/src/constants/appVersion.ts": "Single source of truth constant exporting \"Version 42\" as the application version label.",
-  "frontend/src/components/VersionBadge.tsx": "Reusable component that displays the Version 42 badge using the shared appVersion constant and existing UI primitives.",
-  "frontend/src/pages/AdminRoomsPage.tsx": "Admin-guarded landing page at /admin/rooms displaying all admin rooms as responsive clickable cards with icons, labels, sections, and navigation functionality, excluding self-link to avoid recursion."
+  "frontend/src/constants/appVersion.ts": "Application version constant neutralized to empty string and not displayed in UI.",
+  "frontend/src/components/VersionBadge.tsx": "Reusable component that intentionally renders nothing to hide version information from the UI.",
+  "frontend/src/pages/AdminRoomsPage.tsx": "Admin-guarded landing page at /admin/rooms displaying all admin rooms as responsive clickable cards with icons, labels, sections, and navigation functionality, excluding self-link to avoid recursion, with version badge removed."
 }
