@@ -10,6 +10,7 @@ import { useGetCallerUserProfile } from '../hooks/useQueries';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getOrderedAdminNavSections } from '../constants/adminNav';
 import { useAdminStatus } from '../hooks/useAdminStatus';
+import { navigateToAdminRoute } from '@/utils/adminNavScroll';
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,11 +61,11 @@ export function Header() {
   };
 
   const handleAdminNavClick = (route: string) => {
-    navigate({ to: route });
+    navigateToAdminRoute(navigate, route);
   };
 
   const handleMobileAdminNavClick = (route: string) => {
-    navigate({ to: route });
+    navigateToAdminRoute(navigate, route);
     setMobileMenuOpen(false);
   };
 
@@ -198,268 +199,194 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64 max-h-[80vh]">
                   <ScrollArea className="h-full max-h-[70vh]">
-                    {adminNavSections.map(({ section, items }, sectionIndex) => (
-                      <div key={section}>
-                        <DropdownMenuLabel className="text-xs font-semibold text-primary/80 px-2 py-1.5">
-                          {section}
-                        </DropdownMenuLabel>
-                        {items.map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <DropdownMenuItem
-                              key={item.route}
-                              onClick={() => handleAdminNavClick(item.route)}
-                              className="cursor-pointer px-2 py-1.5"
-                            >
-                              <Icon className="h-4 w-4 mr-2 shrink-0" />
-                              <span className="text-sm break-words">{item.label}</span>
-                            </DropdownMenuItem>
-                          );
-                        })}
-                        {sectionIndex < adminNavSections.length - 1 && <DropdownMenuSeparator />}
-                      </div>
-                    ))}
+                    <div className="p-1">
+                      {adminNavSections.map(({ section, items }) => (
+                        <div key={section} className="mb-2">
+                          <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5">
+                            {section}
+                          </DropdownMenuLabel>
+                          {items.map((item) => {
+                            const IconComponent = item.icon;
+                            return (
+                              <DropdownMenuItem
+                                key={item.route}
+                                onClick={() => handleAdminNavClick(item.route)}
+                                className="cursor-pointer"
+                              >
+                                <IconComponent className="h-4 w-4 mr-2 shrink-0" />
+                                <span className="truncate">{item.label}</span>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                          <DropdownMenuSeparator className="my-1" />
+                        </div>
+                      ))}
+                    </div>
                   </ScrollArea>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
           </nav>
 
-          {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2 flex-1 max-w-xs min-w-0">
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2 flex-1 max-w-xs lg:max-w-sm min-w-0">
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground shrink-0" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground shrink-0" />
               <Input
                 type="search"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-9 text-sm w-full"
+                className="pl-8 h-9 w-full min-w-0"
               />
             </div>
           </form>
 
-          {/* Auth Button - Desktop */}
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
+          {/* Auth Button */}
+          <div className="flex items-center gap-2 shrink-0">
             {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                {userProfile && (
-                  <span className="text-xs xl:text-sm text-muted-foreground truncate max-w-[100px] xl:max-w-[150px]">
-                    {userProfile.name}
-                  </span>
-                )}
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs xl:text-sm whitespace-nowrap"
-                >
-                  Logout
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+                    {userProfile?.name || 'Account'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Button
-                onClick={handleLogin}
+              <Button 
+                onClick={handleLogin} 
                 disabled={isLoggingIn}
                 size="sm"
-                className="text-xs xl:text-sm whitespace-nowrap"
+                className="text-xs sm:text-sm px-2 sm:px-3"
               >
                 {isLoggingIn ? 'Logging in...' : 'Login'}
               </Button>
             )}
-          </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 hover:bg-accent rounded-md transition-colors shrink-0"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+            {/* Mobile Menu Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden p-1.5 sm:p-2"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-primary/20 py-4 space-y-4">
-            {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="px-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-10"
-                />
-              </div>
-            </form>
-
-            {/* Mobile Navigation Links */}
-            <nav className="flex flex-col space-y-1 px-2">
-              <button
-                onClick={() => {
-                  navigate({ to: '/' });
-                  setMobileMenuOpen(false);
-                }}
-                className="text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+          <div className="lg:hidden border-t border-primary/20 py-4">
+            <nav className="flex flex-col gap-2">
+              <button 
+                onClick={() => { navigate({ to: '/' }); setMobileMenuOpen(false); }} 
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-1.5"
               >
                 Home
               </button>
-              <button
-                onClick={() => {
-                  navigate({ to: '/streaming-partners' });
-                  setMobileMenuOpen(false);
-                }}
-                className="text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+              <button 
+                onClick={() => { navigate({ to: '/streaming-partners' }); setMobileMenuOpen(false); }} 
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-1.5"
               >
                 Streaming Partners
               </button>
-
+              
               {/* Mobile Media Genres */}
-              <div className="space-y-1">
-                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">Media Genres</div>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '1' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
-                >
-                  <Film className="h-4 w-4" />
+              <div className="pl-2 border-l-2 border-primary/20 ml-2">
+                <p className="text-xs font-semibold text-muted-foreground mb-1 px-2">Media Genres</p>
+                <button onClick={() => { navigate({ to: '/category/$categoryId', params: { categoryId: '1' } }); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary px-2 py-1.5 w-full text-left">
+                  <Film className="h-4 w-4 shrink-0" />
                   Movies
                 </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '2' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
-                >
-                  <Music className="h-4 w-4" />
+                <button onClick={() => { navigate({ to: '/category/$categoryId', params: { categoryId: '2' } }); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary px-2 py-1.5 w-full text-left">
+                  <Music className="h-4 w-4 shrink-0" />
                   Music
                 </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '3' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
-                >
-                  <Tv className="h-4 w-4" />
+                <button onClick={() => { navigate({ to: '/category/$categoryId', params: { categoryId: '3' } }); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary px-2 py-1.5 w-full text-left">
+                  <Tv className="h-4 w-4 shrink-0" />
                   Live TV
                 </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '4' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
-                >
-                  <Trophy className="h-4 w-4" />
+                <button onClick={() => { navigate({ to: '/category/$categoryId', params: { categoryId: '4' } }); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary px-2 py-1.5 w-full text-left">
+                  <Trophy className="h-4 w-4 shrink-0" />
                   Sports
                 </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '5' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
-                >
-                  <Laugh className="h-4 w-4" />
+                <button onClick={() => { navigate({ to: '/category/$categoryId', params: { categoryId: '5' } }); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary px-2 py-1.5 w-full text-left">
+                  <Laugh className="h-4 w-4 shrink-0" />
                   Comedy
                 </button>
-                <button
-                  onClick={() => {
-                    navigate({ to: '/category/$categoryId', params: { categoryId: '6' } });
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
-                >
-                  <Newspaper className="h-4 w-4" />
+                <button onClick={() => { navigate({ to: '/category/$categoryId', params: { categoryId: '6' } }); setMobileMenuOpen(false); }} className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary px-2 py-1.5 w-full text-left">
+                  <Newspaper className="h-4 w-4 shrink-0" />
                   News
                 </button>
               </div>
 
               {isAuthenticated && (
                 <>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/hiiyah-chat' });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                  <button 
+                    onClick={() => { navigate({ to: '/hiiyah-chat' }); setMobileMenuOpen(false); }} 
+                    className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-1.5"
                   >
-                    <MessageSquare className="h-4 w-4" />
+                    <MessageSquare className="h-4 w-4 shrink-0" />
                     HiiYah Chat
                   </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/wallet' });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                  <button 
+                    onClick={() => { navigate({ to: '/wallet' }); setMobileMenuOpen(false); }} 
+                    className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-1.5"
                   >
-                    <Wallet className="h-4 w-4" />
+                    <Wallet className="h-4 w-4 shrink-0" />
                     Excalibur Wallet
                   </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/credit-card' });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                  <button 
+                    onClick={() => { navigate({ to: '/credit-card' }); setMobileMenuOpen(false); }} 
+                    className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-1.5"
                   >
-                    <CreditCard className="h-4 w-4" />
+                    <CreditCard className="h-4 w-4 shrink-0" />
                     Excalibur Card
                   </button>
-                  <button
-                    onClick={() => {
-                      navigate({ to: '/affiliate' });
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                  <button 
+                    onClick={() => { navigate({ to: '/affiliate' }); setMobileMenuOpen(false); }} 
+                    className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-1.5"
                   >
-                    <Share2 className="h-4 w-4" />
+                    <Share2 className="h-4 w-4 shrink-0" />
                     Affiliate Program
                   </button>
                 </>
               )}
 
-              <button
-                onClick={() => {
-                  navigate({ to: '/mall' });
-                  setMobileMenuOpen(false);
-                }}
-                className="flex items-center gap-2 text-left px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+              <button 
+                onClick={() => { navigate({ to: '/mall' }); setMobileMenuOpen(false); }} 
+                className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors text-left px-2 py-1.5"
               >
-                <ShoppingBag className="h-4 w-4" />
+                <ShoppingBag className="h-4 w-4 shrink-0" />
                 Clear Magic Mall
               </button>
 
               {/* Mobile Admin Menu */}
               {canShowAdminUI && (
-                <div className="space-y-1 pt-2 border-t border-primary/20">
-                  <div className="px-3 py-2 text-xs font-semibold text-primary flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Admin Panel
-                  </div>
+                <div className="pl-2 border-l-2 border-primary/20 ml-2 mt-2">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1 px-2 flex items-center gap-1">
+                    <Shield className="h-3.5 w-3.5" />
+                    Admin Menu
+                  </p>
                   {adminNavSections.map(({ section, items }) => (
-                    <div key={section} className="space-y-1">
-                      <div className="px-3 py-1 text-xs font-semibold text-muted-foreground">
-                        {section}
-                      </div>
+                    <div key={section} className="mb-2">
+                      <p className="text-xs font-semibold text-muted-foreground/70 px-2 py-1">{section}</p>
                       {items.map((item) => {
-                        const Icon = item.icon;
+                        const IconComponent = item.icon;
                         return (
                           <button
                             key={item.route}
                             onClick={() => handleMobileAdminNavClick(item.route)}
-                            className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-foreground/80 hover:text-primary hover:bg-accent rounded-md transition-colors"
+                            className="flex items-center gap-2 text-sm text-foreground/80 hover:text-primary px-2 py-1.5 w-full text-left"
                           >
-                            <Icon className="h-4 w-4 shrink-0" />
-                            <span className="break-words">{item.label}</span>
+                            <IconComponent className="h-4 w-4 shrink-0" />
+                            <span className="truncate">{item.label}</span>
                           </button>
                         );
                       })}
@@ -467,35 +394,21 @@ export function Header() {
                   ))}
                 </div>
               )}
-            </nav>
 
-            {/* Mobile Auth Button */}
-            <div className="px-2 pt-2 border-t border-primary/20">
-              {isAuthenticated ? (
-                <div className="space-y-2">
-                  {userProfile && (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">
-                      Logged in as: <span className="font-medium text-foreground">{userProfile.name}</span>
-                    </div>
-                  )}
-                  <Button
-                    onClick={handleLogout}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Logout
-                  </Button>
+              {/* Mobile Search */}
+              <form onSubmit={handleSearch} className="md:hidden mt-2 px-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 h-9"
+                  />
                 </div>
-              ) : (
-                <Button
-                  onClick={handleLogin}
-                  disabled={isLoggingIn}
-                  className="w-full"
-                >
-                  {isLoggingIn ? 'Logging in...' : 'Login'}
-                </Button>
-              )}
-            </div>
+              </form>
+            </nav>
           </div>
         )}
       </div>

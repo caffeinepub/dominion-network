@@ -10,7 +10,7 @@ export function CategoryPage() {
   const { categoryId } = useParams({ from: '/category/$categoryId' });
   const [selectedContent, setSelectedContent] = useState<MediaContent | null>(null);
   
-  const { data: content = [], isLoading } = useGetContentByCategory(BigInt(categoryId));
+  const { data: content = [], isLoading } = useGetContentByCategory();
 
   const getCategoryName = (id: string) => {
     const categories: Record<string, string> = {
@@ -23,6 +23,12 @@ export function CategoryPage() {
     };
     return categories[id] || 'Content';
   };
+
+  // Convert backend MediaContent to frontend format
+  const convertContent = (item: any) => ({
+    ...item,
+    uploadedBy: item.uploadedBy.toString(),
+  });
 
   return (
     <div className="container py-8 space-y-8 max-w-7xl mx-auto px-4">
@@ -44,8 +50,8 @@ export function CategoryPage() {
           {content.map((item) => (
             <ContentCard
               key={item.id.toString()}
-              content={item}
-              onClick={() => setSelectedContent(item)}
+              content={convertContent(item)}
+              onClick={() => setSelectedContent(convertContent(item))}
             />
           ))}
         </div>

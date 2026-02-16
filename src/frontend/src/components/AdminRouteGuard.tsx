@@ -1,36 +1,29 @@
-import { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-import { AdminAccessDenied } from './AdminAccessDenied';
+import { ReactNode } from 'react';
 import { useAdminStatus } from '../hooks/useAdminStatus';
+import { AdminAccessDenied } from './AdminAccessDenied';
+import { Loader2 } from 'lucide-react';
 
 interface AdminRouteGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function AdminRouteGuard({ children }: AdminRouteGuardProps) {
-  const { isAuthenticated, isAdmin, isAdminLoading, refetchAdminStatus } = useAdminStatus();
-
-  // Refetch admin status when component mounts or identity changes
-  useEffect(() => {
-    if (isAuthenticated) {
-      refetchAdminStatus();
-    }
-  }, [isAuthenticated, refetchAdminStatus]);
+  const { isAuthenticated, canShowAdminUI, isAdminLoading } = useAdminStatus();
 
   // Show loading only when authenticated and checking admin status
   if (isAuthenticated && isAdminLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-primary/5">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Verifying admin access...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-400 mx-auto mb-4" />
+          <p className="text-slate-300">Verifying admin access...</p>
         </div>
       </div>
     );
   }
 
-  // Show access denied for non-authenticated or non-admin users
-  if (!isAuthenticated || !isAdmin) {
+  // Show access denied immediately for non-authenticated or non-admin users
+  if (!canShowAdminUI) {
     return <AdminAccessDenied />;
   }
 

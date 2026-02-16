@@ -1,105 +1,148 @@
 {
   "kind": "build_request",
-  "title": "Complete and fix the Admin area (navigation, access flow, and all required admin rooms)",
+  "title": "Fix admin invite login flow, approvals actions, admin edit/upload permissions, and responsive layout",
+  "projectName": "Dominion Admin Suite",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Restore a complete, working Admin navigation experience so authenticated admins can reliably access every required admin room from (1) the Header Admin dropdown and (2) the Admin Rooms hub page at /admin/rooms.",
+      "text": "Make the selected-admin invite link login/redemption flow fully functional end-to-end: admins can open an invite URL containing a token, log in with Internet Identity, redeem the token, and then successfully access admin routes.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Make sure admin link for selected admin to login is activated and working properly."
+        ]
+      },
+      "acceptanceCriteria": [
+        "An invite URL using the existing route \"/invite/accept?token=...\" works for a logged-out user: the page prompts Internet Identity login and then automatically redeems the same token after login.",
+        "If the token is missing, invalid, or already used, the page shows a clear error state and does not grant admin access.",
+        "After successful redemption, the user can navigate to at least one protected admin route (e.g., \"/admin/approvals\") without seeing the access denied screen.",
+        "Backend exposes a callable method matching the frontend expectation (\"redeemAdminInvite\") and it grants admin privileges to the caller for a valid token.",
+        "Admin invite link generation UI produces a copyable URL that points to the correct route and includes the token query parameter."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Implement working approval actions so that all approval/decision buttons in the admin approval areas are enabled and perform real approve/reject operations against the backend for every approval type shown in the UI.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Make sure approval buttons are hot and working properly."
+        ]
+      },
+      "acceptanceCriteria": [
+        "In the Admin Approval page, any section that lists pending items renders actionable Approve/Reject (and where applicable Delete/Bulk) controls that call backend methods and update the UI state on success.",
+        "Buttons show a loading/disabled state while a mutation is in flight, and show an error toast/message when an operation fails.",
+        "After an approve/reject action, the relevant React Query query keys are invalidated/refetched so the pending item count and list update correctly without a full reload.",
+        "Backend enforces that only admins can approve/reject these pending items; non-admin callers receive an authorization error.",
+        "No approval tab displays a placeholder message like \"not yet implemented\" when the backend supports the data and actions for that tab."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Enable full edit capabilities for admins across admin-managed entities already present in the UI (not just create/delete), including adding backend update methods where missing and adding corresponding edit UI flows.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Make sure full edits can be done by admin."
+        ]
+      },
+      "acceptanceCriteria": [
+        "For content managed in the Admin Content page, admins can edit existing items’ editable fields (e.g., title/description/duration/media type/categories/thumbnail/file where supported by the existing data model) via an explicit edit flow and persist changes.",
+        "For ads managed in the Admin Ads page (and any other existing admin CRUD screens), edit actions persist to the backend and reflect immediately in the list after save.",
+        "Backend provides admin-only update endpoints for each edited entity type, and validates that the target item exists before updating.",
+        "The UI prevents accidental data loss (e.g., cancel returns without saving; save is disabled while saving)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Ensure uploads can be performed by all admins in all admin upload rooms, including aligning backend authorization so admins are permitted to upload where currently restricted to regular users only.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Make sure uploads can be made by all admin."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Any backend upload/create function that is used from admin routes allows admin callers to succeed even if the permission check previously only allowed \"#user\".",
+        "All admin upload UIs (e.g., content upload, display upload, image library upload, media upload room) work for an authenticated admin account without authorization traps.",
+        "Non-admin users still cannot access admin upload routes due to the existing route guard, and backend still enforces authorization appropriately."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Fix responsive layout issues across all pages so no text or images overlap or render off-screen on common breakpoints (mobile, tablet, desktop), including admin pages with wide tab lists/tables.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "You still did not accomplish the requested job. Get the admin area done as requested."
+          "Make sure all pages have no overlapping and all pictures and words are completely visible on screen across all devices."
         ]
       },
       "acceptanceCriteria": [
-        "When logged in as an admin, the Header shows an Admin dropdown that contains links to every required admin room, and each link navigates successfully.",
-        "/admin/rooms is accessible to admins and shows a hub UI with links to every required admin room (excluding self-link).",
-        "All admin navigation links match the actual registered router paths (no 404s, no broken links).",
-        "Admin navigation is usable on both desktop and mobile (no overflow, items are scrollable when long)."
+        "No page requires horizontal scrolling on mobile except within intentional horizontal containers (e.g., a table wrapper using overflow-x-auto).",
+        "Admin Approval tabs remain usable on small screens: tab list is scrollable without clipping and tab content cards/buttons remain fully visible.",
+        "Images and hero/brand elements scale down appropriately and never push text off-screen.",
+        "Long identifiers (e.g., principals) wrap/break safely and do not overflow their containers."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Ensure the admin access flow is correct and consistent: all admin routes are protected, admins can access them, and non-admin users (or logged-out users) are blocked using the existing AdminAccessDenied screen without crashes or infinite loading states.",
-      "target": "both",
+      "id": "REQ-6",
+      "text": "Apply a coherent visual theme consistently across the app UI (colors, typography, surfaces) that improves readability on dark backgrounds while keeping the current information architecture unchanged.",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Get the admin area done as requested."
+          "Try again in a flow that works for ai"
         ]
       },
       "acceptanceCriteria": [
-        "Every /admin/* route is guarded so that non-authenticated or non-admin users cannot view admin pages.",
-        "Non-admin and logged-out users attempting to access /admin/* routes see the existing access denied UI (not a blank screen).",
-        "Admins do not see access denied for valid admin routes; guard verification completes successfully.",
-        "Admin status checks are resilient to identity changes (login/logout) and do not require a hard refresh to start working."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Rebuild and/or verify that all required admin rooms and panels are present, routable, and do not crash; ensure each page renders with safe loading/empty/error states and that primary actions work end-to-end with the backend where supported. Required rooms: approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, and mall admin.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "You still did not accomplish the requested job."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Each required admin room has a working route and renders without runtime errors in the browser console.",
-        "Each room has safe loading/empty/error UI so missing data or backend errors do not crash the page.",
-        "Admin Ads supports create/update/delete/toggle active without UI dead-ends (buttons either work or show a clear, non-crashing error).",
-        "Admin Affiliate supports creating and listing tiers (or shows a clear message if backend capability is missing).",
-        "Admin Invite Links can generate/list codes and copy invite URLs; invite accept flow at /invite/accept works for valid/invalid tokens with clear messaging.",
-        "Approvals and Editing Room pages allow approve/reject flows (or show capability-based disabling with clear explanation) and never crash when queues are empty.",
-        "Media Upload and Image Library allow upload flows (or degrade gracefully if storage/back-end methods are unavailable), and list items with correct grouping/status.",
-        "Pricing & Terms and Price Control pages render and allow saving changes where supported; otherwise show a clear non-crashing placeholder stating the capability is unavailable.",
-        "Member Directory loads and displays user profiles (or shows a clear message if the backend method is unavailable) and supports basic filtering/search UI without crashing.",
-        "Display Screen admin page loads current state and allows setting/updating display content (or degrades gracefully with clear messaging).",
-        "Mall Admin page renders and supports CRUD actions (or degrades gracefully with clear messaging)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Prevent regressions: keep all existing requested functionality working while finishing the admin system, and ensure no new runtime errors are introduced in unrelated areas (public pages, wallet, credit card, streaming partners, chat).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Get the admin area done as requested."
-        ]
-      },
-      "acceptanceCriteria": [
-        "No new console errors are introduced on core non-admin routes (/, /wallet, /credit-card, /streaming-partners, /hiiyah-chat, /mall, /terms).",
-        "Existing navigation (public and authenticated user navigation) continues to work after admin fixes.",
-        "Admin changes do not break Internet Identity login/logout flow and do not require a page refresh to recover from auth changes."
+        "All primary screens share consistent background/surface styling, text contrast, and spacing rules.",
+        "Theme avoids low-contrast text on gradients and preserves readability for headings, body text, and form labels.",
+        "No admin navigation structure/routes are changed as part of theming (visual-only adjustments)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
-    "Do not edit files under frontend/src/components/ui (compose these components instead).",
-    "Do not edit immutable hook/bootstrap files listed in SYSTEM_CONTEXT (frontend/src/hooks/useInternetIdentity.ts / .tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
-    "Use English for any user-facing text."
+    "Do not modify files in frontend immutablePaths (e.g., frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui).",
+    "Keep the existing admin route structure as defined in frontend/src/App.tsx (no route renames/removals).",
+    "Backend must remain a single Motoko actor in backend/main.mo; only add backend/migration.mo changes if a stable-state schema change is required."
   ],
   "nonGoals": [
-    "Adding new unrelated product features outside the admin restoration scope.",
-    "Integrating third-party authentication providers (only Internet Identity is supported).",
-    "Adding external databases or non-Motoko backend services.",
-    "Real-time features via WebSockets/push notifications."
+    "Implementing external mainnet blockchain node authorization or any external infrastructure setup.",
+    "Adding new third-party authentication providers beyond Internet Identity.",
+    "Adding real-time websocket-based updates; approvals can continue using polling/refetch via React Query."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [
+      "Prefer an implementation plan that follows a step-by-step flow the AI can execute reliably (invite flow first, then approvals, then edit/upload permissions, then responsive fixes)."
+    ],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

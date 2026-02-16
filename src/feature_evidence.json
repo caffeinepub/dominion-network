@@ -2,11 +2,38 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-ensure-the-admin-access-flow-is-correct-and-consistent-all-admin-routes-are-protected-admins-can-access-them-and-non-admin-users-or-logged-out-users-are-blocked-using-the-existing-adminaccessdenied-screen-without-crashes-or-infinite-loading-states",
-      "featureTitle": "Ensure the admin access flow is correct and consistent: all admin routes are protected, admins can access them, and non-admin users (or logged-out users) are blocked using the existing AdminAccessDenied screen without crashes or infinite loading states.",
+      "featureId": "feature-make-the-selected-admin-invite-link-login-redemption-flow-fully-functional-end-to-end-admins-can-open-an-invite-url-containing-a-token-log-in-with-internet-identity-redeem-the-token-and-then-successfully-access-admin-routes",
+      "featureTitle": "Make the selected-admin invite link login/redemption flow fully functional end-to-end: admins can open an invite URL containing a token, log in with Internet Identity, redeem the token, and then successfully access admin routes.",
       "files": [
-        "frontend/src/components/AdminRouteGuard.tsx",
-        "frontend/src/hooks/useAdminStatus.ts"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminInviteAcceptPage.tsx",
+        "frontend/src/pages/AdminInviteLinksPage.tsx",
+        "frontend/src/utils/urlParams.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "user-approval@3.0.0",
+        "camera@1.0.0",
+        "invite-links@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-working-approval-actions-so-that-all-approval-decision-buttons-in-the-admin-approval-areas-are-enabled-and-perform-real-approve-reject-operations-against-the-backend-for-every-approval-type-shown-in-the-ui",
+      "featureTitle": "Implement working approval actions so that all approval/decision buttons in the admin approval areas are enabled and perform real approve/reject operations against the backend for every approval type shown in the UI.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminApprovalPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -27,13 +54,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-rebuild-and-or-verify-that-all-required-admin-rooms-and-panels-are-present-routable-and-do-not-crash-ensure-each-page-renders-with-safe-loading-empty-error-states-and-that-primary-actions-work-end-to-end-with-the-backend-where-supported-required-rooms-approvals-dashboards-editing-room-uploads-pricing-terms-price-control-image-library-wallet-management-ads-affiliate-member-directory-invite-links-display-screen-and-mall-admin",
-      "featureTitle": "Rebuild and/or verify that all required admin rooms and panels are present, routable, and do not crash; ensure each page renders with safe loading/empty/error states and that primary actions work end-to-end with the backend where supported. Required rooms: approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, and mall admin.",
+      "featureId": "feature-enable-full-edit-capabilities-for-admins-across-admin-managed-entities-already-present-in-the-ui-not-just-create-delete-including-adding-backend-update-methods-where-missing-and-adding-corresponding-edit-ui-flows",
+      "featureTitle": "Enable full edit capabilities for admins across admin-managed entities already present in the UI (not just create/delete), including adding backend update methods where missing and adding corresponding edit UI flows.",
       "files": [
-        "frontend/src/components/admin/AdminCapabilityNotice.tsx",
-        "frontend/src/pages/AdminAdsPage.tsx",
-        "frontend/src/pages/AdminAffiliatePage.tsx",
-        "frontend/src/pages/AdminMemberDirectoryPage.tsx"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminAdsPage.tsx"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -50,6 +75,80 @@
       ],
       "testIds": [
         "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-uploads-can-be-performed-by-all-admins-in-all-admin-upload-rooms-including-aligning-backend-authorization-so-admins-are-permitted-to-upload-where-currently-restricted-to-regular-users-only",
+      "featureTitle": "Ensure uploads can be performed by all admins in all admin upload rooms, including aligning backend authorization so admins are permitted to upload where currently restricted to regular users only.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "user-approval@3.0.0",
+        "camera@1.0.0",
+        "invite-links@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-responsive-layout-issues-across-all-pages-so-no-text-or-images-overlap-or-render-off-screen-on-common-breakpoints-mobile-tablet-desktop-including-admin-pages-with-wide-tab-lists-tables",
+      "featureTitle": "Fix responsive layout issues across all pages so no text or images overlap or render off-screen on common breakpoints (mobile, tablet, desktop), including admin pages with wide tab lists/tables.",
+      "files": [
+        "frontend/src/index.css",
+        "frontend/src/pages/AdminAdsPage.tsx",
+        "frontend/src/pages/AdminApprovalPage.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "user-approval@3.0.0",
+        "camera@1.0.0",
+        "invite-links@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-coherent-visual-theme-consistently-across-the-app-ui-colors-typography-surfaces-that-improves-readability-on-dark-backgrounds-while-keeping-the-current-information-architecture-unchanged",
+      "featureTitle": "Apply a coherent visual theme consistently across the app UI (colors, typography, surfaces) that improves readability on dark backgrounds while keeping the current information architecture unchanged.",
+      "files": [
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "user-approval@3.0.0",
+        "camera@1.0.0",
+        "invite-links@3.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }

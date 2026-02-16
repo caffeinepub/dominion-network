@@ -1,230 +1,179 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Radio, Users, MessageSquare, Shield, CheckCircle, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   useGetPendingBroadcastRequests,
-  useGetPendingHeroJoinRequests,
   useApproveBroadcastRequest,
-  useRejectBroadcastRequest,
+  useGetPendingHeroJoinRequests,
   useApproveHeroJoinRequest,
-  useRejectHeroJoinRequest,
 } from '../hooks/useQueries';
+import { CheckCircle, XCircle, Radio, UserPlus, Loader2 } from 'lucide-react';
 
 export function AdminHiiYahChatPage() {
-  const { data: pendingBroadcasts = [] } = useGetPendingBroadcastRequests();
-  const { data: pendingHeroJoins = [] } = useGetPendingHeroJoinRequests();
+  const { data: broadcastRequests = [], isLoading: broadcastLoading } = useGetPendingBroadcastRequests();
+  const { data: heroJoinRequests = [], isLoading: heroJoinLoading } = useGetPendingHeroJoinRequests();
 
   const approveBroadcast = useApproveBroadcastRequest();
-  const rejectBroadcast = useRejectBroadcastRequest();
   const approveHeroJoin = useApproveHeroJoinRequest();
-  const rejectHeroJoin = useRejectHeroJoinRequest();
 
   const handleApproveBroadcast = async (requestId: bigint) => {
     try {
-      await approveBroadcast.mutateAsync(requestId);
-      toast.success('Broadcast approved!');
-    } catch (error: any) {
-      toast.error(`Failed to approve: ${error.message}`);
+      await approveBroadcast.mutateAsync({ id: requestId, approved: true });
+    } catch (error) {
+      console.error('Failed to approve broadcast:', error);
     }
   };
 
   const handleRejectBroadcast = async (requestId: bigint) => {
     try {
-      await rejectBroadcast.mutateAsync(requestId);
-      toast.success('Broadcast rejected');
-    } catch (error: any) {
-      toast.error(`Failed to reject: ${error.message}`);
+      await approveBroadcast.mutateAsync({ id: requestId, approved: false });
+    } catch (error) {
+      console.error('Failed to reject broadcast:', error);
     }
   };
 
   const handleApproveHeroJoin = async (requestId: bigint) => {
     try {
-      await approveHeroJoin.mutateAsync(requestId);
-      toast.success('Hero join approved!');
-    } catch (error: any) {
-      toast.error(`Failed to approve: ${error.message}`);
+      await approveHeroJoin.mutateAsync({ id: requestId, approved: true });
+    } catch (error) {
+      console.error('Failed to approve hero join:', error);
     }
   };
 
   const handleRejectHeroJoin = async (requestId: bigint) => {
     try {
-      await rejectHeroJoin.mutateAsync(requestId);
-      toast.success('Hero join rejected');
-    } catch (error: any) {
-      toast.error(`Failed to reject: ${error.message}`);
+      await approveHeroJoin.mutateAsync({ id: requestId, approved: false });
+    } catch (error) {
+      console.error('Failed to reject hero join:', error);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
-            <Shield className="h-8 w-8" />
-            HiiYah Chat Administration
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage live broadcasts, Hero participation, and chat moderation
-          </p>
-        </div>
+    <div className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
+      <div>
+        <h1 className="text-3xl font-bold gradient-text mb-2">HiiYah Chat Management</h1>
+        <p className="text-muted-foreground">Manage broadcast and Hero join requests</p>
       </div>
 
-      <Tabs defaultValue="broadcasts" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 gap-2">
+      <Tabs defaultValue="broadcasts">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
           <TabsTrigger value="broadcasts">
             <Radio className="h-4 w-4 mr-2" />
-            Broadcast Requests
+            Broadcasts
+            {broadcastRequests.length > 0 && (
+              <Badge variant="destructive" className="ml-2">{broadcastRequests.length}</Badge>
+            )}
           </TabsTrigger>
-          <TabsTrigger value="hero">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Hero Join Requests
-          </TabsTrigger>
-          <TabsTrigger value="active">
-            <Users className="h-4 w-4 mr-2" />
-            Active Broadcasts
+          <TabsTrigger value="hero-joins">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Hero Joins
+            {heroJoinRequests.length > 0 && (
+              <Badge variant="destructive" className="ml-2">{heroJoinRequests.length}</Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
-        {/* Broadcast Requests */}
-        <TabsContent value="broadcasts" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Broadcast Requests</CardTitle>
-              <CardDescription>
-                Approve or reject user requests to go live ({pendingBroadcasts.length} pending)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pendingBroadcasts.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No pending broadcast requests</p>
-              ) : (
-                <ScrollArea className="h-[500px]">
-                  <div className="space-y-4">
-                    {pendingBroadcasts.map((request) => (
-                      <div key={request.id.toString()} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{request.title}</h3>
-                            <p className="text-sm text-muted-foreground">{request.description}</p>
-                            <p className="text-xs text-muted-foreground">
-                              User: {request.userId.toString().slice(0, 20)}...
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Requested: {new Date(Number(request.requestedAt) / 1000000).toLocaleString()}
-                            </p>
-                          </div>
-                          <Badge variant={request.status === 'pending' ? 'secondary' : 'default'}>
-                            {request.status}
-                          </Badge>
-                        </div>
-                        {request.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveBroadcast(request.id)}
-                              disabled={approveBroadcast.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleRejectBroadcast(request.id)}
-                              disabled={rejectBroadcast.isPending}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+        <TabsContent value="broadcasts" className="space-y-4">
+          {broadcastLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : broadcastRequests.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No pending broadcast requests
+              </CardContent>
+            </Card>
+          ) : (
+            broadcastRequests.map((request) => (
+              <Card key={request.id.toString()}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle>{request.title}</CardTitle>
+                      <CardDescription>{request.description}</CardDescription>
+                    </div>
+                    <Badge variant="outline">Pending</Badge>
                   </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleApproveBroadcast(request.id)}
+                      disabled={approveBroadcast.isPending}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Approve
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectBroadcast(request.id)}
+                      disabled={approveBroadcast.isPending}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Reject
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </TabsContent>
 
-        {/* Hero Join Requests */}
-        <TabsContent value="hero" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Hero Join Requests</CardTitle>
-              <CardDescription>
-                Approve or reject Hero Helper join requests ({pendingHeroJoins.length} pending)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pendingHeroJoins.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No pending Hero join requests</p>
-              ) : (
-                <ScrollArea className="h-[500px]">
-                  <div className="space-y-4">
-                    {pendingHeroJoins.map((request) => (
-                      <div key={request.id.toString()} className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">Room ID: {request.roomId.toString()}</h3>
-                            <p className="text-xs text-muted-foreground">
-                              User: {request.requestedBy.toString().slice(0, 20)}...
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Requested: {new Date(Number(request.requestedAt) / 1000000).toLocaleString()}
-                            </p>
-                          </div>
-                          <Badge variant={request.status === 'pending' ? 'secondary' : 'default'}>
-                            {request.status}
-                          </Badge>
-                        </div>
-                        {request.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveHeroJoin(request.id)}
-                              disabled={approveHeroJoin.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleRejectHeroJoin(request.id)}
-                              disabled={rejectHeroJoin.isPending}
-                            >
-                              <XCircle className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+        <TabsContent value="hero-joins" className="space-y-4">
+          {heroJoinLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : heroJoinRequests.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No pending Hero join requests
+              </CardContent>
+            </Card>
+          ) : (
+            heroJoinRequests.map((request) => (
+              <Card key={request.id.toString()}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle>Hero Join Request</CardTitle>
+                      <CardDescription>Room ID: {request.roomId.toString()}</CardDescription>
+                      <p className="text-xs text-muted-foreground mt-1 font-mono break-all">
+                        {request.requestedBy.toString()}
+                      </p>
+                    </div>
+                    <Badge variant="outline">Pending</Badge>
                   </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Active Broadcasts */}
-        <TabsContent value="active" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Broadcasts</CardTitle>
-              <CardDescription>
-                Currently live broadcasts on the platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center text-muted-foreground py-8">No active broadcasts</p>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleApproveHeroJoin(request.id)}
+                      disabled={approveHeroJoin.isPending}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Approve
+                    </Button>
+                    <Button
+                      onClick={() => handleRejectHeroJoin(request.id)}
+                      disabled={approveHeroJoin.isPending}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Reject
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </TabsContent>
       </Tabs>
     </div>

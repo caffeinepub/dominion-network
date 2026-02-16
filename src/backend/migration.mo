@@ -1,4 +1,11 @@
+import Map "mo:core/Map";
+import Nat "mo:core/Nat";
+
 module {
-  type Actor = {};
-  public func run(old : Actor) : Actor { old };
+  public type OldActor = {};
+  public type NewActor = {};
+
+  public func run(old : OldActor) : NewActor {
+    {};
+  };
 };

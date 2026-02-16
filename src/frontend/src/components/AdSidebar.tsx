@@ -8,7 +8,7 @@ interface AdSidebarProps {
 }
 
 export function AdSidebar({ placement }: AdSidebarProps) {
-  const { data: ads = [] } = useGetAdsByPlacement(placement);
+  const { data: ads = [] } = useGetAdsByPlacement();
   const trackView = useTrackAdView();
   const trackClick = useTrackAdClick();
 

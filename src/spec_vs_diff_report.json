@@ -1,108 +1,112 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T21:32:57.491Z",
-  "summary": "Diff implements parts of the admin access guard and several admin pages with safer loading/error states, plus a reusable AdminCapabilityNotice. However, the diff evidence does not show completion of the full required admin room set, invite accept flow, approvals/editing flows, or comprehensive admin navigation verification across all required rooms. The diff also includes multiple unrelated feature changes (Hero, HeroHelper, Wallet/CreditCard, styling/theme, assets/text), which are outside the requested admin restoration scope.",
+  "generatedAt": "2026-02-16T15:44:26.469Z",
+  "summary": "Diff implements parts of the requested admin invite UX and broad UI theming/responsive CSS, but the diff summary is truncated for key backend/main.mo and hooks, so several core end-to-end/admin-enforced behaviors can’t be verified. Additionally, multiple unrelated features appear added/changed (chat uploads, ad tracking UI, hero/footer branding changes, affiliate dashboard changes).",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Header Admin dropdown and /admin/rooms hub must include links to every required admin room; links must match registered routes; navigation usable on desktop/mobile (scrollable).",
-      "reason": "The diff summary claims Header/App changes, but no concrete diff content is provided for Header.tsx/App.tsx/adminNav constants or the /admin/rooms hub UI itself. Also, there is no evidence that the dropdown/hub includes links to *every* required room (approvals, editing, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, mall admin).",
+      "requirement": "Backend exposes a callable method matching the frontend expectation (\"redeemAdminInvite\") and it grants admin privileges to the caller for a valid token.",
+      "reason": "Frontend adds a React Query mutation that calls actor.redeemAdminInvite, but the backend diff is truncated and does not show any redeemAdminInvite method or admin-granting logic.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions Header.tsx and App.tsx changes but provides no actual link list/paths)",
-        "frontend/src/components/AdminRouteGuard.tsx (guard only; no navigation links)"
+        "frontend/src/hooks/useQueries.ts",
+        "backend/main.mo (truncated)"
       ]
     },
     {
       "id": "REQ-2",
-      "requirement": "Every /admin/* route must be guarded; non-admin/logged-out users see existing AdminAccessDenied; admin checks resilient to identity changes without hard refresh.",
-      "reason": "AdminRouteGuard and useAdminStatus improvements are shown, but there is no diff evidence that *every* /admin/* route is wrapped/guarded (router configuration in App.tsx is not shown, only described in a summary).",
+      "requirement": "Backend enforces that only admins can approve/reject pending items; non-admin callers receive an authorization error.",
+      "reason": "Frontend wires many approval mutations via hooks, but backend authorization for approve/reject methods is not visible in the truncated backend/main.mo diff.",
       "evidence": [
-        "frontend/src/components/AdminRouteGuard.tsx",
-        "frontend/src/hooks/useAdminStatus.ts",
-        "frontend-file-summaries.txt (claims App.tsx wraps admin routes, but no code shown)"
+        "frontend/src/pages/AdminApprovalPage.tsx",
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "All approval/decision buttons perform real approve/reject operations against the backend for every approval type shown, with query invalidation/refetch.",
+      "reason": "AdminApprovalPage references many hooks (approve pending content/member/admin/card load/price update/affiliate payout/images/broadcast/hero join), but the hook implementations are truncated, so it’s not verifiable that each action calls backend methods, handles loading/disabled states, and invalidates the correct query keys.",
+      "evidence": [
+        "frontend/src/pages/AdminApprovalPage.tsx",
+        "frontend/src/hooks/useQueries.ts (truncated)"
       ]
     },
     {
       "id": "REQ-3",
-      "requirement": "All required admin rooms must be present and routable (approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, mall admin) with safe loading/empty/error states; primary actions work end-to-end where supported (notably invite links accept flow, approvals/editing approve/reject flows, uploads/image library flows, pricing save, display updates, mall CRUD).",
-      "reason": "Only three admin pages are evidenced as modified (AdminAdsPage, AdminAffiliatePage, AdminMemberDirectoryPage). There is no diff evidence of routes/pages for approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, invite links (+ /invite/accept flow), display screen, or mall admin, nor evidence of their required action flows.",
+      "requirement": "Enable full edit capabilities for admins across admin-managed entities already present in the UI (not just create/delete), including adding backend update methods where missing and corresponding edit UI flows (e.g., Admin Content page editable fields).",
+      "reason": "There is clear edit/update flow added for ads (AdminAdsPage uses useUpdateAd), but the diff summary provides no evidence of equivalent edit flows for other admin-managed entities (notably content editing fields) nor corresponding backend update endpoints (backend truncated).",
       "evidence": [
         "frontend/src/pages/AdminAdsPage.tsx",
-        "frontend/src/pages/AdminAffiliatePage.tsx",
-        "frontend/src/pages/AdminMemberDirectoryPage.tsx",
-        "frontend-file-summaries.txt (does not show implementation for the other required rooms or /invite/accept)"
+        "backend/main.mo (truncated)"
       ]
     },
     {
       "id": "REQ-4",
-      "requirement": "Prevent regressions: no new console errors on core non-admin routes; existing public/auth navigation continues to work; admin changes do not break Internet Identity login/logout flow and do not require refresh after auth changes.",
-      "reason": "The diff includes broad, unrelated modifications to many non-admin areas (Hero, content components, Footer, Wallet/CreditCard pages, CSS/theme, Tailwind config). The diff summary does not provide evidence of regression testing or guarantees that these changes introduce no new console errors on the listed core routes.",
+      "requirement": "Align backend authorization so admins are permitted to upload/create in admin upload rooms where previously restricted (e.g., checks that only allowed \"#user\").",
+      "reason": "No diff evidence shows backend permission-check changes for upload/create functions; backend/main.mo is truncated and no specific upload auth logic changes are shown.",
       "evidence": [
-        "frontend-file-summaries.txt (lists many non-admin component/page changes unrelated to admin restoration)"
+        "backend/main.mo (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Enhanced floating AI assistant (HeroHelper) with click-to-position, full voice capabilities, memory system, background monitoring mode, and “comprehensive platform knowledge”.",
-      "reason": "Not requested; explicitly outside the admin restoration scope and likely a new unrelated product feature.",
+      "description": "Chat room supports sending file attachments (image/video/audio/file) with size limit and converting selected files to ExternalBlob; polling refresh every 3 seconds.",
+      "reason": "BuildRequest is focused on admin invite flow, approvals, admin editing/upload permissions, responsive layout, and theming; chat file uploads are not requested.",
       "evidence": [
-        "frontend-file-summaries.txt (HeroHelper.tsx description)"
+        "frontend/src/components/ChatRoomComponent.tsx"
       ]
     },
     {
-      "description": "Homepage/Hero marketing changes (badge text update and new people-free background image).",
-      "reason": "Not requested; unrelated to completing/fixing the Admin area.",
+      "description": "Ad banner/sidebar components track ad views and clicks and open target URLs.",
+      "reason": "Ad tracking UI components are not part of the stated requirements (requests were about admin flows/permissions and global responsiveness/theme).",
       "evidence": [
-        "frontend-file-summaries.txt (Hero.tsx description)"
+        "frontend/src/components/AdBanner.tsx",
+        "frontend/src/components/AdSidebar.tsx"
       ]
     },
     {
-      "description": "Content library/player expansions (ContentGrid/ContentCard/ContentPlayer with full media playback controls and rating UI).",
-      "reason": "Not requested; outside admin restoration scope.",
+      "description": "Affiliate dashboard implementation changes (referral URL generation, tier display placeholders, etc.).",
+      "reason": "Affiliate dashboard work is not requested by any REQ-1..REQ-6 items.",
       "evidence": [
-        "frontend-file-summaries.txt (ContentGrid.tsx, ContentCard.tsx, ContentPlayer.tsx descriptions)"
+        "frontend/src/pages/AffiliateDashboardPage.tsx"
       ]
     },
     {
-      "description": "Footer changes including updated logo and an “admin login button”.",
-      "reason": "Not requested (admin navigation/rooms were requested, not a new footer admin login entry).",
+      "description": "Hero/footer branding and asset changes (new hero badge text, people-free background image, updated logo) and related layout wrapper changes.",
+      "reason": "These are beyond the requested admin fixes; while theming is requested, specific content/asset swaps and new marketing copy are not required by the BuildRequest.",
       "evidence": [
-        "frontend-file-summaries.txt (Footer.tsx description)"
+        "frontend-file-summaries.txt (Hero.tsx, Footer.tsx, Layout.tsx)"
       ]
     },
     {
-      "description": "Global style/theme overhaul (index.css futuristic backgrounds, dropdown behavior changes, Tailwind config theme colors/animations, index.html meta/title updates).",
-      "reason": "Not requested; broad UI/theme changes beyond admin restoration.",
+      "description": "Backend migration module added but contains an empty run that returns {} with no schema mapping.",
+      "reason": "BuildRequest allows adding migration.mo only if a stable-state schema change is required; diff shows migration added but provides no evidence of an actual schema change needing migration.",
       "evidence": [
-        "frontend-file-summaries.txt (index.css, tailwind.config.js, index.html descriptions)"
-      ]
-    },
-    {
-      "description": "Wallet page changes claiming “Counterparty mainnet node hosting integration” and “real-time transaction history”.",
-      "reason": "Not requested; explicitly outside admin restoration scope and conflicts with non-goal of adding unrelated product features.",
-      "evidence": [
-        "frontend-file-summaries.txt (WalletPage.tsx description)"
-      ]
-    },
-    {
-      "description": "Credit card page changes (details truncated but indicated as modified).",
-      "reason": "Not requested; outside admin restoration scope.",
-      "evidence": [
-        "frontend-file-summaries.txt (CreditCardPage.tsx entry is present but truncated)"
+        "backend/migration.mo"
       ]
     }
   ],
-  "confidence": 0.64,
+  "confidence": 0.58,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AdminRouteGuard.tsx",
-    "frontend/src/components/admin/AdminCapabilityNotice.tsx",
-    "frontend/src/hooks/useAdminStatus.ts",
+    "frontend/src/components/AdBanner.tsx",
+    "frontend/src/components/AdSidebar.tsx",
+    "frontend/src/components/ChatRoomComponent.tsx",
+    "frontend/src/components/ContentGrid.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
     "frontend/src/pages/AdminAdsPage.tsx",
-    "frontend/src/pages/AdminAffiliatePage.tsx",
-    "frontend/src/pages/AdminMemberDirectoryPage.tsx",
+    "frontend/src/pages/AdminApprovalPage.tsx",
+    "frontend/src/pages/AdminEditingRoomPage.tsx",
+    "frontend/src/pages/AdminHiiYahChatPage.tsx",
+    "frontend/src/pages/AdminInviteAcceptPage.tsx",
+    "frontend/src/pages/AdminInviteLinksPage.tsx",
+    "frontend/src/pages/AffiliateDashboardPage.tsx",
+    "frontend/src/pages/CategoryPage.tsx",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json"
   ]
 }

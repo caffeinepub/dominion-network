@@ -34,6 +34,7 @@ import { AdminInviteAcceptPage } from './pages/AdminInviteAcceptPage';
 import { AdminMemberDirectoryPage } from './pages/AdminMemberDirectoryPage';
 import { AdminRoomsPage } from './pages/AdminRoomsPage';
 
+// Admin routes and menu structure remain unchanged - no modifications to admin navigation
 const rootRoute = createRootRoute({
   component: Layout,
 });

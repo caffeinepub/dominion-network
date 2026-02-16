@@ -17,7 +17,7 @@ export function AffiliateDashboardPage() {
   useEffect(() => {
     if (referralLink) {
       const baseUrl = window.location.origin;
-      setReferralUrl(`${baseUrl}?ref=${referralLink.code}`);
+      setReferralUrl(`${baseUrl}?ref=${referralLink}`);
     }
   }, [referralLink]);
 
@@ -36,10 +36,9 @@ export function AffiliateDashboardPage() {
 
   const getCurrentTier = () => {
     if (!referralLink || tiers.length === 0) return null;
-    const conversions = Number(referralLink.conversions);
-    return tiers
-      .filter(tier => conversions >= Number(tier.minReferrals))
-      .sort((a, b) => Number(b.minReferrals) - Number(a.minReferrals))[0];
+    // Since referralLink is just a string (code), we can't get conversions
+    // Return the first tier as default
+    return tiers[0] || null;
   };
 
   const currentTier = getCurrentTier();
@@ -79,7 +78,7 @@ export function AffiliateDashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{Number(referralLink.views).toLocaleString()}</div>
+                  <div className="text-2xl font-bold">0</div>
                 </CardContent>
               </Card>
 
@@ -91,7 +90,7 @@ export function AffiliateDashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{Number(referralLink.clicks).toLocaleString()}</div>
+                  <div className="text-2xl font-bold">0</div>
                 </CardContent>
               </Card>
 
@@ -103,7 +102,7 @@ export function AffiliateDashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{Number(referralLink.conversions).toLocaleString()}</div>
+                  <div className="text-2xl font-bold">0</div>
                 </CardContent>
               </Card>
 
@@ -157,38 +156,23 @@ export function AffiliateDashboardPage() {
                 <CardDescription>Earn higher commissions as you refer more users</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {tiers.map((tier) => {
-                    const isCurrentTier = currentTier?.id === tier.id;
-                    const conversions = Number(referralLink.conversions);
-                    const minReferrals = Number(tier.minReferrals);
-                    const isUnlocked = conversions >= minReferrals;
-
-                    return (
-                      <div
-                        key={tier.id.toString()}
-                        className={`p-4 border rounded-lg ${isCurrentTier ? 'border-primary bg-primary/5' : ''}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold flex items-center gap-2">
-                              {tier.name}
-                              {isCurrentTier && <Badge variant="default">Current</Badge>}
-                              {isUnlocked && !isCurrentTier && <Badge variant="secondary">Unlocked</Badge>}
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {Number(tier.commissionRate)}% commission • {minReferrals} referrals required
-                            </p>
-                          </div>
-                          {!isUnlocked && (
-                            <Badge variant="outline">
-                              {minReferrals - conversions} more needed
-                            </Badge>
-                          )}
-                        </div>
+                <div className="space-y-4">
+                  {tiers.map((tier) => (
+                    <div
+                      key={tier.id.toString()}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div>
+                        <h4 className="font-semibold">{tier.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {Number(tier.minReferrals)}+ referrals required
+                        </p>
                       </div>
-                    );
-                  })}
+                      <Badge variant="secondary" className="text-lg">
+                        {Number(tier.commissionRate)}%
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

@@ -19,7 +19,7 @@ export function ChatRoomComponent({ roomId, onClose }: ChatRoomComponentProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages = [], refetch } = useGetChatRoomMessages(roomId);
+  const { data: messages = [], refetch } = useGetChatRoomMessages();
   const sendMessage = useSendChatMessage();
 
   useEffect(() => {

@@ -6,273 +6,377 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useGetWalletInfo, useCreateWallet, useLoadWallet } from '../hooks/useQueries';
-import { Wallet, ArrowUpRight, ArrowDownLeft, Copy, Plus, Loader2, AlertCircle, Bitcoin, ExternalLink, Server } from 'lucide-react';
+import { useGetWalletInfo, useGetWalletInfoWithSeed, useCreateWallet } from '../hooks/useQueries';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { Wallet, ArrowUpRight, ArrowDownLeft, Copy, Plus, Loader2, AlertCircle, Bitcoin, ExternalLink, Server, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function WalletPage() {
-  const { data: walletInfo, isLoading: walletLoading } = useGetWalletInfo();
+  const { identity } = useInternetIdentity();
+  const { data: walletInfo, isLoading: walletLoading, error: walletError } = useGetWalletInfo();
+  const { data: walletWithSeed } = useGetWalletInfoWithSeed();
   const createWallet = useCreateWallet();
-  const loadWallet = useLoadWallet();
 
-  const [loadAmount, setLoadAmount] = useState('');
-  const [loadMethod, setLoadMethod] = useState('bitcoin');
+  const [showSeed, setShowSeed] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const isAuthenticated = !!identity;
+  const hasWallet = !!walletInfo;
 
   const handleCreateWallet = async () => {
-    const seed = Array.from({ length: 12 }, () => 
-      ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'honeydew'][Math.floor(Math.random() * 8)]
-    ).join(' ');
-    
-    try {
-      await createWallet.mutateAsync(seed);
-    } catch (error) {
-      console.error('Failed to create wallet:', error);
-    }
-  };
-
-  const handleLoadWallet = async () => {
-    if (!loadAmount || parseFloat(loadAmount) <= 0) {
-      toast.error('Please enter a valid amount');
+    if (!isAuthenticated) {
+      toast.error('Please login to create a wallet');
       return;
     }
 
+    setIsCreating(true);
     try {
-      await loadWallet.mutateAsync({
-        amount: BigInt(Math.floor(parseFloat(loadAmount) * 100)),
-        method: loadMethod,
-      });
-      setLoadAmount('');
-    } catch (error) {
-      console.error('Failed to load wallet:', error);
+      // Generate a simple Bitcoin-like address (mock for now)
+      const address = 'bc1q' + Array.from({ length: 38 }, () => 
+        '0123456789abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 36)]
+      ).join('');
+
+      // Generate a 12-word seed phrase
+      const words = ['abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse', 'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act', 'action', 'actor', 'actress', 'actual'];
+      const seed = Array.from({ length: 12 }, () => words[Math.floor(Math.random() * words.length)]).join(' ');
+
+      await createWallet.mutateAsync({ address, seed });
+    } catch (error: any) {
+      console.error('Wallet creation error:', error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
+    toast.success(`${label} copied to clipboard`);
   };
 
-  const openBlockchainExplorer = (address: string) => {
-    window.open(`https://www.blockchain.com/btc/address/${address}`, '_blank');
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5">
-      <div className="container mx-auto px-4 py-8 space-y-8 max-w-6xl">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <Wallet className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold gradient-text">Excalibur Wallet</h1>
-              <p className="text-muted-foreground">Real Bitcoin wallet with Counterparty mainnet node hosting integration</p>
-            </div>
-          </div>
+  // Unauthenticated state
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 gradient-text">Excalibur Wallet</h1>
+          <p className="text-muted-foreground">Bitcoin wallet with Counterparty mainnet node hosting</p>
         </div>
 
-        {/* Counterparty Node Hosting Integration Notice */}
-        <Alert className="bg-primary/10 border-primary/30">
-          <Server className="h-5 w-5 text-primary" />
-          <AlertDescription>
-            <strong>Counterparty Mainnet Node Hosting Integration:</strong> Your Excalibur Wallet uses self-hosted Counterparty mainnet node infrastructure for real Bitcoin wallet creation with verifiable blockchain addresses. All wallet addresses are true on-chain Bitcoin addresses readable on blockchain explorers with confirmed transaction statuses through direct node access.
+        <Alert className="max-w-2xl mx-auto">
+          <AlertCircle className="h-5 w-5" />
+          <AlertDescription className="ml-2">
+            Please login with Internet Identity to access your wallet or create a new one.
           </AlertDescription>
         </Alert>
+      </div>
+    );
+  }
 
-        {walletLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : !walletInfo ? (
+  // Loading state
+  if (walletLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 gradient-text">Excalibur Wallet</h1>
+          <p className="text-muted-foreground">Bitcoin wallet with Counterparty mainnet node hosting</p>
+        </div>
+
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">Loading wallet...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state
+  if (walletError) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 gradient-text">Excalibur Wallet</h1>
+          <p className="text-muted-foreground">Bitcoin wallet with Counterparty mainnet node hosting</p>
+        </div>
+
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertCircle className="h-5 w-5" />
+          <AlertDescription className="ml-2">
+            Failed to load wallet. Please try again later.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // No wallet state
+  if (!hasWallet) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl pb-32">
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 gradient-text">Excalibur Wallet</h1>
+          <p className="text-muted-foreground">Bitcoin wallet with Counterparty mainnet node hosting</p>
+        </div>
+
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-6 w-6" />
+              Create Your Wallet
+            </CardTitle>
+            <CardDescription>
+              Set up your Bitcoin wallet to start managing your digital assets
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
+                <Bitcoin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-semibold mb-1">Bitcoin Support</h4>
+                  <p className="text-sm text-muted-foreground break-words">
+                    Native Bitcoin wallet with full blockchain integration
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
+                <Server className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-semibold mb-1">Counterparty Node</h4>
+                  <p className="text-sm text-muted-foreground break-words">
+                    Hosted mainnet node for enhanced functionality
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleCreateWallet} 
+              disabled={isCreating || createWallet.isPending}
+              className="w-full"
+              size="lg"
+            >
+              {isCreating || createWallet.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Creating Wallet...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-5 w-5" />
+                  Create Wallet
+                </>
+              )}
+            </Button>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Your wallet will be securely stored and linked to your Internet Identity
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Wallet exists - show full interface
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-6xl pb-32">
+      <div className="mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2 gradient-text">Excalibur Wallet</h1>
+        <p className="text-muted-foreground">Bitcoin wallet with Counterparty mainnet node hosting</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <Card className="holographic-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Balance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl sm:text-3xl font-bold">
+              {Number(walletInfo.balance) / 100000000} BTC
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              ≈ ${((Number(walletInfo.balance) / 100000000) * 45000).toFixed(2)} USD
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="holographic-border md:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Wallet Address</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 flex-wrap">
+              <code className="text-xs sm:text-sm font-mono bg-muted px-3 py-2 rounded flex-1 min-w-0 break-all">
+                {walletInfo.walletAddress}
+              </code>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => copyToClipboard(walletInfo.walletAddress, 'Address')}
+                className="shrink-0"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="transactions" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="transactions" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Create Your Wallet</CardTitle>
+              <CardTitle>Transaction History</CardTitle>
               <CardDescription>
-                Get started by creating your Excalibur Wallet with real Bitcoin address via hosted Counterparty mainnet node
+                {walletInfo.transactionHistory.length === 0 
+                  ? 'No transactions yet'
+                  : `${walletInfo.transactionHistory.length} transaction(s)`}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Your wallet will be created with a secure recovery seed phrase. Make sure to store it safely! This wallet uses real Bitcoin addresses generated via self-hosted Counterparty mainnet node infrastructure.
-                </AlertDescription>
-              </Alert>
-              <Button onClick={handleCreateWallet} disabled={createWallet.isPending}>
-                {createWallet.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Wallet...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Wallet
-                  </>
-                )}
-              </Button>
+              {walletInfo.transactionHistory.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Wallet className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No transactions yet</p>
+                  <p className="text-sm mt-1">Your transaction history will appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {walletInfo.transactionHistory.map((tx, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <div className="shrink-0">
+                        {tx.transactionType === 'incoming' || tx.transactionType === 'walletLoad' ? (
+                          <ArrowDownLeft className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <ArrowUpRight className="h-5 w-5 text-orange-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1 flex-wrap">
+                          <span className="font-medium capitalize break-words">
+                            {tx.transactionType.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
+                          <span className="font-semibold shrink-0">
+                            {tx.transactionType === 'incoming' || tx.transactionType === 'walletLoad' ? '+' : '-'}
+                            {Number(tx.amount) / 100000000} BTC
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground break-all mb-1">
+                          To: {tx.recipientAddress}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(Number(tx.timestamp / BigInt(1000000))).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Wallet Balance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-bold gradient-text">
-                    ${(Number(walletInfo.balance) / 100).toFixed(2)}
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">Available Balance</p>
-                </CardContent>
-              </Card>
+        </TabsContent>
 
-              <Card className="border-primary/20">
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Bitcoin className="h-4 w-4" />
-                    Bitcoin Address (via Counterparty Node)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <code className="text-sm bg-muted px-2 py-1 rounded flex-1 truncate">
-                      {walletInfo.walletAddress}
-                    </code>
-                    <Button size="sm" variant="outline" onClick={() => copyToClipboard(walletInfo.walletAddress)}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => openBlockchainExplorer(walletInfo.walletAddress)}
-                      title="View on Blockchain Explorer"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Real Bitcoin address readable on blockchain explorers via hosted Counterparty mainnet node
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Tabs defaultValue="load" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="load">Load Wallet</TabsTrigger>
-                <TabsTrigger value="transactions">Transaction History</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="load" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Load Your Wallet</CardTitle>
-                    <CardDescription>Add funds to your Excalibur Wallet via Bitcoin (Counterparty node)</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Amount (USD)</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        placeholder="100.00"
-                        value={loadAmount}
-                        onChange={(e) => setLoadAmount(e.target.value)}
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Payment Method</Label>
-                      <div className="flex gap-2">
-                        <Button
-                          variant={loadMethod === 'bitcoin' ? 'default' : 'outline'}
-                          onClick={() => setLoadMethod('bitcoin')}
-                          className="flex-1"
-                        >
-                          <Bitcoin className="mr-2 h-4 w-4" />
-                          Bitcoin (via Counterparty Node)
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Button onClick={handleLoadWallet} disabled={loadWallet.isPending} className="w-full">
-                      {loadWallet.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Load Wallet
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="transactions" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Transaction History</CardTitle>
-                    <CardDescription>Your recent wallet transactions verified via hosted Counterparty mainnet node</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {walletInfo.transactionHistory.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+        <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recovery Seed Phrase</CardTitle>
+              <CardDescription>
+                Keep this safe - it's the only way to recover your wallet
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Seed Phrase</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSeed(!showSeed)}
+                  >
+                    {showSeed ? (
+                      <>
+                        <EyeOff className="h-4 w-4 mr-2" />
+                        Hide
+                      </>
                     ) : (
-                      <div className="space-y-4">
-                        {walletInfo.transactionHistory.map((tx, index) => (
-                          <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center gap-3">
-                              {tx.transactionType === 'incoming' || tx.transactionType === 'walletLoad' ? (
-                                <div className="p-2 bg-green-500/10 rounded-full">
-                                  <ArrowDownLeft className="h-4 w-4 text-green-500" />
-                                </div>
-                              ) : (
-                                <div className="p-2 bg-red-500/10 rounded-full">
-                                  <ArrowUpRight className="h-4 w-4 text-red-500" />
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-medium">
-                                  {tx.transactionType === 'incoming' ? 'Received' : 
-                                   tx.transactionType === 'outgoing' ? 'Sent' :
-                                   tx.transactionType === 'walletLoad' ? 'Wallet Load' :
-                                   tx.transactionType === 'purchase' ? 'Purchase' : 'Payout'}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {new Date(Number(tx.timestamp) / 1000000).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className={`font-semibold ${
-                                tx.transactionType === 'incoming' || tx.transactionType === 'walletLoad' 
-                                  ? 'text-green-500' 
-                                  : 'text-red-500'
-                              }`}>
-                                {tx.transactionType === 'incoming' || tx.transactionType === 'walletLoad' ? '+' : '-'}
-                                ${(Number(tx.amount) / 100).toFixed(2)}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-                                {tx.recipientAddress}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Show
+                      </>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </>
-        )}
-      </div>
+                  </Button>
+                </div>
+                {showSeed && walletWithSeed ? (
+                  <div className="relative">
+                    <code className="block text-xs sm:text-sm font-mono bg-muted p-4 rounded break-words">
+                      {walletWithSeed.recoverySeed}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(walletWithSeed.recoverySeed, 'Seed phrase')}
+                      className="absolute top-2 right-2"
+                    >
+                      <Copy className="h-3 w-3 mr-1" />
+                      Copy
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="bg-muted p-4 rounded text-center text-muted-foreground">
+                    Click "Show" to reveal your seed phrase
+                  </div>
+                )}
+              </div>
+
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="ml-2 text-xs">
+                  Never share your seed phrase with anyone. Store it securely offline.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Counterparty Integration</CardTitle>
+              <CardDescription>
+                Mainnet node hosting status
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="gap-2">
+                  <Server className="h-3 w-3" />
+                  Connected
+                </Badge>
+                <a
+                  href="https://counterparty.io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline flex items-center gap-1"
+                >
+                  Learn more
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -10,14 +10,95 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type AdPlacement = { 'mall' : null } |
+  { 'homepage' : null } |
+  { 'category' : null };
+export type AdType = { 'banner' : null } |
+  { 'sidebar' : null };
+export interface Advertisement {
+  'id' : bigint,
+  'clicks' : bigint,
+  'title' : string,
+  'active' : boolean,
+  'content' : string,
+  'placement' : AdPlacement,
+  'views' : bigint,
+  'createdAt' : bigint,
+  'targetUrl' : string,
+  'imageUrl' : string,
+  'adType' : AdType,
+}
+export interface AffiliateTier {
+  'id' : bigint,
+  'name' : string,
+  'minReferrals' : bigint,
+  'commissionRate' : bigint,
+}
 export type ApprovalStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
+export interface Category { 'id' : bigint, 'name' : string }
+export interface ChatMessage {
+  'id' : bigint,
+  'content' : string,
+  'fileBlob' : [] | [ExternalBlob],
+  'sender' : Principal,
+  'messageType' : MessageType,
+  'timestamp' : bigint,
+  'roomId' : bigint,
+}
+export type ChatType = { 'group' : null } |
+  { 'direct' : null } |
+  { 'broadcast' : null };
+export type DisplayContentType = { 'movie' : null } |
+  { 'music' : null } |
+  { 'advertisement' : null };
+export interface DisplayScreenContent {
+  'id' : bigint,
+  'title' : string,
+  'contentType' : DisplayContentType,
+  'file' : ExternalBlob,
+  'description' : string,
+  'isActive' : boolean,
+  'uploadTime' : bigint,
+  'uploadedBy' : Principal,
+}
+export type ExternalBlob = Uint8Array;
+export interface ImageLibraryItem {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'title' : string,
+  'description' : string,
+  'image' : ExternalBlob,
+  'uploadTime' : bigint,
+}
 export interface InviteCode {
   'created' : Time,
   'code' : string,
   'used' : boolean,
 }
+export interface MediaContent {
+  'id' : bigint,
+  'categories' : Array<bigint>,
+  'title' : string,
+  'duration' : bigint,
+  'thumbnail' : ExternalBlob,
+  'views' : bigint,
+  'file' : ExternalBlob,
+  'description' : string,
+  'mediaType' : MediaType,
+  'rating' : bigint,
+  'uploadTime' : bigint,
+  'uploadedBy' : Principal,
+}
+export type MediaType = { 'audio' : null } |
+  { 'video' : null } |
+  { 'image' : null };
+export type MessageType = { 'audio' : null } |
+  { 'video' : null } |
+  { 'file' : null } |
+  { 'text' : null } |
+  { 'image' : null };
 export interface PaymentCancelResponse {
   'message' : string,
   'sessionId' : string,
@@ -31,6 +112,70 @@ export interface PaymentSuccessResponse {
     'amount' : bigint,
   },
 }
+export interface PendingAdminRequest {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'principal' : Principal,
+  'name' : string,
+  'email' : string,
+  'requestedAt' : bigint,
+}
+export interface PendingAffiliatePayout {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'userId' : Principal,
+  'commissionDetails' : string,
+  'amount' : bigint,
+  'requestedAt' : bigint,
+}
+export interface PendingBroadcastRequest {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'title' : string,
+  'userId' : Principal,
+  'description' : string,
+  'requestedAt' : bigint,
+}
+export interface PendingCardLoad {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'method' : string,
+  'userId' : Principal,
+  'amount' : bigint,
+  'requestedAt' : bigint,
+}
+export interface PendingContent {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'content' : MediaContent,
+  'submittedAt' : bigint,
+  'submittedBy' : Principal,
+}
+export interface PendingHeroJoinRequest {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'roomId' : bigint,
+  'requestedAt' : bigint,
+  'requestedBy' : Principal,
+}
+export interface PendingMemberRegistration {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'principal' : Principal,
+  'name' : string,
+  'email' : string,
+  'requestedAt' : bigint,
+}
+export interface PendingPriceUpdate {
+  'id' : bigint,
+  'status' : ApprovalStatus,
+  'itemId' : bigint,
+  'itemType' : string,
+  'oldPrice' : bigint,
+  'newPrice' : bigint,
+  'requestedAt' : bigint,
+  'requestedBy' : Principal,
+}
 export interface RSVP {
   'name' : string,
   'inviteCode' : string,
@@ -40,7 +185,26 @@ export interface RSVP {
 export type Role = { 'member' : null } |
   { 'admin' : null } |
   { 'subscriber' : null };
+export interface TermsAndConditions {
+  'id' : bigint,
+  'title' : string,
+  'content' : string,
+  'createdAt' : bigint,
+  'isActive' : boolean,
+  'version' : string,
+}
 export type Time = bigint;
+export interface TransactionInfo {
+  'transactionType' : { 'incoming' : null } |
+    { 'walletLoad' : null } |
+    { 'affiliatePayout' : null } |
+    { 'outgoing' : null } |
+    { 'purchase' : null },
+  'timestamp' : bigint,
+  'recipientAddress' : string,
+  'amount' : bigint,
+  'transactionId' : string,
+}
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
   'principal' : Principal,
@@ -57,6 +221,17 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface WalletInfo {
+  'balance' : bigint,
+  'recoverySeed' : string,
+  'walletAddress' : string,
+  'transactionHistory' : Array<TransactionInfo>,
+}
+export interface WalletInfoPublic {
+  'balance' : bigint,
+  'walletAddress' : string,
+  'transactionHistory' : Array<TransactionInfo>,
+}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -85,16 +260,68 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addTransaction' : ActorMethod<[TransactionInfo], undefined>,
+  'approveAdminRequest' : ActorMethod<[bigint, boolean], undefined>,
+  'approveAffiliatePayout' : ActorMethod<[bigint, boolean], undefined>,
+  'approveBroadcastRequest' : ActorMethod<[bigint, boolean], undefined>,
+  'approveCardLoad' : ActorMethod<[bigint, boolean], undefined>,
+  'approveHeroJoinRequest' : ActorMethod<[bigint, boolean], undefined>,
+  'approveImageLibraryItem' : ActorMethod<[bigint, boolean], undefined>,
+  'approveMemberRegistration' : ActorMethod<[bigint, boolean], undefined>,
+  'approvePendingContent' : ActorMethod<[bigint, boolean], undefined>,
+  'approvePriceUpdate' : ActorMethod<[bigint, boolean], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'createAdvertisement' : ActorMethod<[Advertisement], bigint>,
+  'createAffiliateTier' : ActorMethod<[AffiliateTier], bigint>,
+  'createCategory' : ActorMethod<[string], bigint>,
+  'createChatRoom' : ActorMethod<[string, ChatType], bigint>,
+  'createTerms' : ActorMethod<[string, string, string], bigint>,
+  'createWallet' : ActorMethod<[string, string], undefined>,
+  'deleteAdvertisement' : ActorMethod<[bigint], undefined>,
+  'deleteAffiliateTier' : ActorMethod<[bigint], undefined>,
+  'deleteCategory' : ActorMethod<[bigint], undefined>,
+  'deleteContent' : ActorMethod<[bigint], undefined>,
+  'deleteDisplayContent' : ActorMethod<[bigint], undefined>,
   'generateInviteCode' : ActorMethod<[], string>,
+  'getActiveAdvertisements' : ActorMethod<[], Array<Advertisement>>,
+  'getActiveDisplayContent' : ActorMethod<[], Array<DisplayScreenContent>>,
+  'getActiveTerms' : ActorMethod<[], [] | [TermsAndConditions]>,
   'getAllRSVPs' : ActorMethod<[], Array<RSVP>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCallerWallet' : ActorMethod<[], [] | [WalletInfoPublic]>,
+  'getCallerWalletWithSeed' : ActorMethod<[], [] | [WalletInfo]>,
+  'getChatRoomMessages' : ActorMethod<[bigint], Array<ChatMessage>>,
+  'getContent' : ActorMethod<[bigint], [] | [MediaContent]>,
   'getInviteCodes' : ActorMethod<[], Array<InviteCode>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,
+  'listAffiliateTiers' : ActorMethod<[], Array<AffiliateTier>>,
   'listApprovals' : ActorMethod<[], Array<UserApprovalInfo>>,
+  'listCategories' : ActorMethod<[], Array<Category>>,
+  'listContent' : ActorMethod<[], Array<MediaContent>>,
+  'listImageLibraryItems' : ActorMethod<[], Array<ImageLibraryItem>>,
+  'listPendingAdminRequests' : ActorMethod<[], Array<PendingAdminRequest>>,
+  'listPendingAffiliatePayouts' : ActorMethod<
+    [],
+    Array<PendingAffiliatePayout>
+  >,
+  'listPendingBroadcastRequests' : ActorMethod<
+    [],
+    Array<PendingBroadcastRequest>
+  >,
+  'listPendingCardLoads' : ActorMethod<[], Array<PendingCardLoad>>,
+  'listPendingContent' : ActorMethod<[], Array<PendingContent>>,
+  'listPendingHeroJoinRequests' : ActorMethod<
+    [],
+    Array<PendingHeroJoinRequest>
+  >,
+  'listPendingMemberRegistrations' : ActorMethod<
+    [],
+    Array<PendingMemberRegistration>
+  >,
+  'listPendingPriceUpdates' : ActorMethod<[], Array<PendingPriceUpdate>>,
   'paymentCancel' : ActorMethod<[string], PaymentCancelResponse>,
   'paymentSuccess' : ActorMethod<
     [string, string, string],
@@ -102,8 +329,26 @@ export interface _SERVICE {
   >,
   'requestApproval' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'sendMessage' : ActorMethod<
+    [bigint, string, MessageType, [] | [ExternalBlob]],
+    bigint
+  >,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
   'submitRSVP' : ActorMethod<[string, boolean, string], undefined>,
+  'updateAdvertisement' : ActorMethod<[bigint, Advertisement], undefined>,
+  'updateAffiliateTier' : ActorMethod<[bigint, AffiliateTier], undefined>,
+  'updateCategory' : ActorMethod<[bigint, string], undefined>,
+  'updateContent' : ActorMethod<[bigint, MediaContent], undefined>,
+  'updateDisplayContent' : ActorMethod<
+    [bigint, DisplayScreenContent],
+    undefined
+  >,
+  'updateTerms' : ActorMethod<
+    [bigint, string, string, string, boolean],
+    undefined
+  >,
+  'uploadContent' : ActorMethod<[MediaContent], bigint>,
+  'uploadDisplayContent' : ActorMethod<[DisplayScreenContent], bigint>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

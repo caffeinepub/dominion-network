@@ -41,22 +41,21 @@ export function Layout() {
   if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4 px-4">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm sm:text-base text-muted-foreground">Loading...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen flex flex-col overflow-x-hidden ${getBackgroundClass()}`}>
+    <div className={`min-h-screen flex flex-col ${getBackgroundClass()}`}>
       <Header />
-      <main className="flex-1 w-full pt-0">
+      <main className={`flex-1 ${isAdminRoute ? '' : 'pb-24 sm:pb-28'}`}>
         <Outlet />
       </main>
       <Footer />
-      {/* Only show HeroHelper on non-admin routes */}
       {!isAdminRoute && <HeroHelper />}
     </div>
   );

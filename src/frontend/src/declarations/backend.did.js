@@ -19,10 +19,80 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const TransactionInfo = IDL.Record({
+  'transactionType' : IDL.Variant({
+    'incoming' : IDL.Null,
+    'walletLoad' : IDL.Null,
+    'affiliatePayout' : IDL.Null,
+    'outgoing' : IDL.Null,
+    'purchase' : IDL.Null,
+  }),
+  'timestamp' : IDL.Int,
+  'recipientAddress' : IDL.Text,
+  'amount' : IDL.Nat,
+  'transactionId' : IDL.Text,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
+});
+export const AdPlacement = IDL.Variant({
+  'mall' : IDL.Null,
+  'homepage' : IDL.Null,
+  'category' : IDL.Null,
+});
+export const AdType = IDL.Variant({
+  'banner' : IDL.Null,
+  'sidebar' : IDL.Null,
+});
+export const Advertisement = IDL.Record({
+  'id' : IDL.Nat,
+  'clicks' : IDL.Nat,
+  'title' : IDL.Text,
+  'active' : IDL.Bool,
+  'content' : IDL.Text,
+  'placement' : AdPlacement,
+  'views' : IDL.Nat,
+  'createdAt' : IDL.Int,
+  'targetUrl' : IDL.Text,
+  'imageUrl' : IDL.Text,
+  'adType' : AdType,
+});
+export const AffiliateTier = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'minReferrals' : IDL.Nat,
+  'commissionRate' : IDL.Nat,
+});
+export const ChatType = IDL.Variant({
+  'group' : IDL.Null,
+  'direct' : IDL.Null,
+  'broadcast' : IDL.Null,
+});
+export const DisplayContentType = IDL.Variant({
+  'movie' : IDL.Null,
+  'music' : IDL.Null,
+  'advertisement' : IDL.Null,
+});
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const DisplayScreenContent = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'contentType' : DisplayContentType,
+  'file' : ExternalBlob,
+  'description' : IDL.Text,
+  'isActive' : IDL.Bool,
+  'uploadTime' : IDL.Int,
+  'uploadedBy' : IDL.Principal,
+});
+export const TermsAndConditions = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'content' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'isActive' : IDL.Bool,
+  'version' : IDL.Text,
 });
 export const Time = IDL.Int;
 export const RSVP = IDL.Record({
@@ -45,6 +115,52 @@ export const UserProfile = IDL.Record({
   'creditCardNumber' : IDL.Text,
   'viewingHistory' : IDL.Vec(IDL.Nat),
 });
+export const WalletInfoPublic = IDL.Record({
+  'balance' : IDL.Nat,
+  'walletAddress' : IDL.Text,
+  'transactionHistory' : IDL.Vec(TransactionInfo),
+});
+export const WalletInfo = IDL.Record({
+  'balance' : IDL.Nat,
+  'recoverySeed' : IDL.Text,
+  'walletAddress' : IDL.Text,
+  'transactionHistory' : IDL.Vec(TransactionInfo),
+});
+export const MessageType = IDL.Variant({
+  'audio' : IDL.Null,
+  'video' : IDL.Null,
+  'file' : IDL.Null,
+  'text' : IDL.Null,
+  'image' : IDL.Null,
+});
+export const ChatMessage = IDL.Record({
+  'id' : IDL.Nat,
+  'content' : IDL.Text,
+  'fileBlob' : IDL.Opt(ExternalBlob),
+  'sender' : IDL.Principal,
+  'messageType' : MessageType,
+  'timestamp' : IDL.Int,
+  'roomId' : IDL.Nat,
+});
+export const MediaType = IDL.Variant({
+  'audio' : IDL.Null,
+  'video' : IDL.Null,
+  'image' : IDL.Null,
+});
+export const MediaContent = IDL.Record({
+  'id' : IDL.Nat,
+  'categories' : IDL.Vec(IDL.Nat),
+  'title' : IDL.Text,
+  'duration' : IDL.Nat,
+  'thumbnail' : ExternalBlob,
+  'views' : IDL.Nat,
+  'file' : ExternalBlob,
+  'description' : IDL.Text,
+  'mediaType' : MediaType,
+  'rating' : IDL.Nat,
+  'uploadTime' : IDL.Int,
+  'uploadedBy' : IDL.Principal,
+});
 export const InviteCode = IDL.Record({
   'created' : Time,
   'code' : IDL.Text,
@@ -58,6 +174,79 @@ export const ApprovalStatus = IDL.Variant({
 export const UserApprovalInfo = IDL.Record({
   'status' : ApprovalStatus,
   'principal' : IDL.Principal,
+});
+export const Category = IDL.Record({ 'id' : IDL.Nat, 'name' : IDL.Text });
+export const ImageLibraryItem = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'title' : IDL.Text,
+  'description' : IDL.Text,
+  'image' : ExternalBlob,
+  'uploadTime' : IDL.Int,
+});
+export const PendingAdminRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'principal' : IDL.Principal,
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'requestedAt' : IDL.Int,
+});
+export const PendingAffiliatePayout = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'userId' : IDL.Principal,
+  'commissionDetails' : IDL.Text,
+  'amount' : IDL.Nat,
+  'requestedAt' : IDL.Int,
+});
+export const PendingBroadcastRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'title' : IDL.Text,
+  'userId' : IDL.Principal,
+  'description' : IDL.Text,
+  'requestedAt' : IDL.Int,
+});
+export const PendingCardLoad = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'method' : IDL.Text,
+  'userId' : IDL.Principal,
+  'amount' : IDL.Nat,
+  'requestedAt' : IDL.Int,
+});
+export const PendingContent = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'content' : MediaContent,
+  'submittedAt' : IDL.Int,
+  'submittedBy' : IDL.Principal,
+});
+export const PendingHeroJoinRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'roomId' : IDL.Nat,
+  'requestedAt' : IDL.Int,
+  'requestedBy' : IDL.Principal,
+});
+export const PendingMemberRegistration = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'principal' : IDL.Principal,
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'requestedAt' : IDL.Int,
+});
+export const PendingPriceUpdate = IDL.Record({
+  'id' : IDL.Nat,
+  'status' : ApprovalStatus,
+  'itemId' : IDL.Nat,
+  'itemType' : IDL.Text,
+  'oldPrice' : IDL.Nat,
+  'newPrice' : IDL.Nat,
+  'requestedAt' : IDL.Int,
+  'requestedBy' : IDL.Principal,
 });
 export const PaymentCancelResponse = IDL.Record({
   'message' : IDL.Text,
@@ -101,11 +290,47 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addTransaction' : IDL.Func([TransactionInfo], [], []),
+  'approveAdminRequest' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approveAffiliatePayout' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approveBroadcastRequest' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approveCardLoad' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approveHeroJoinRequest' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approveImageLibraryItem' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approveMemberRegistration' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approvePendingContent' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+  'approvePriceUpdate' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'createAdvertisement' : IDL.Func([Advertisement], [IDL.Nat], []),
+  'createAffiliateTier' : IDL.Func([AffiliateTier], [IDL.Nat], []),
+  'createCategory' : IDL.Func([IDL.Text], [IDL.Nat], []),
+  'createChatRoom' : IDL.Func([IDL.Text, ChatType], [IDL.Nat], []),
+  'createTerms' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+  'createWallet' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'deleteAdvertisement' : IDL.Func([IDL.Nat], [], []),
+  'deleteAffiliateTier' : IDL.Func([IDL.Nat], [], []),
+  'deleteCategory' : IDL.Func([IDL.Nat], [], []),
+  'deleteContent' : IDL.Func([IDL.Nat], [], []),
+  'deleteDisplayContent' : IDL.Func([IDL.Nat], [], []),
   'generateInviteCode' : IDL.Func([], [IDL.Text], []),
+  'getActiveAdvertisements' : IDL.Func([], [IDL.Vec(Advertisement)], ['query']),
+  'getActiveDisplayContent' : IDL.Func(
+      [],
+      [IDL.Vec(DisplayScreenContent)],
+      ['query'],
+    ),
+  'getActiveTerms' : IDL.Func([], [IDL.Opt(TermsAndConditions)], ['query']),
   'getAllRSVPs' : IDL.Func([], [IDL.Vec(RSVP)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCallerWallet' : IDL.Func([], [IDL.Opt(WalletInfoPublic)], ['query']),
+  'getCallerWalletWithSeed' : IDL.Func([], [IDL.Opt(WalletInfo)], ['query']),
+  'getChatRoomMessages' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(ChatMessage)],
+      ['query'],
+    ),
+  'getContent' : IDL.Func([IDL.Nat], [IDL.Opt(MediaContent)], ['query']),
   'getInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -114,7 +339,47 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+  'listAffiliateTiers' : IDL.Func([], [IDL.Vec(AffiliateTier)], ['query']),
   'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+  'listCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+  'listContent' : IDL.Func([], [IDL.Vec(MediaContent)], ['query']),
+  'listImageLibraryItems' : IDL.Func(
+      [],
+      [IDL.Vec(ImageLibraryItem)],
+      ['query'],
+    ),
+  'listPendingAdminRequests' : IDL.Func(
+      [],
+      [IDL.Vec(PendingAdminRequest)],
+      ['query'],
+    ),
+  'listPendingAffiliatePayouts' : IDL.Func(
+      [],
+      [IDL.Vec(PendingAffiliatePayout)],
+      ['query'],
+    ),
+  'listPendingBroadcastRequests' : IDL.Func(
+      [],
+      [IDL.Vec(PendingBroadcastRequest)],
+      ['query'],
+    ),
+  'listPendingCardLoads' : IDL.Func([], [IDL.Vec(PendingCardLoad)], ['query']),
+  'listPendingContent' : IDL.Func([], [IDL.Vec(PendingContent)], ['query']),
+  'listPendingHeroJoinRequests' : IDL.Func(
+      [],
+      [IDL.Vec(PendingHeroJoinRequest)],
+      ['query'],
+    ),
+  'listPendingMemberRegistrations' : IDL.Func(
+      [],
+      [IDL.Vec(PendingMemberRegistration)],
+      ['query'],
+    ),
+  'listPendingPriceUpdates' : IDL.Func(
+      [],
+      [IDL.Vec(PendingPriceUpdate)],
+      ['query'],
+    ),
   'paymentCancel' : IDL.Func([IDL.Text], [PaymentCancelResponse], []),
   'paymentSuccess' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text],
@@ -123,8 +388,25 @@ export const idlService = IDL.Service({
     ),
   'requestApproval' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'sendMessage' : IDL.Func(
+      [IDL.Nat, IDL.Text, MessageType, IDL.Opt(ExternalBlob)],
+      [IDL.Nat],
+      [],
+    ),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
   'submitRSVP' : IDL.Func([IDL.Text, IDL.Bool, IDL.Text], [], []),
+  'updateAdvertisement' : IDL.Func([IDL.Nat, Advertisement], [], []),
+  'updateAffiliateTier' : IDL.Func([IDL.Nat, AffiliateTier], [], []),
+  'updateCategory' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'updateContent' : IDL.Func([IDL.Nat, MediaContent], [], []),
+  'updateDisplayContent' : IDL.Func([IDL.Nat, DisplayScreenContent], [], []),
+  'updateTerms' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+      [],
+      [],
+    ),
+  'uploadContent' : IDL.Func([MediaContent], [IDL.Nat], []),
+  'uploadDisplayContent' : IDL.Func([DisplayScreenContent], [IDL.Nat], []),
 });
 
 export const idlInitArgs = [];
@@ -141,10 +423,77 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
+  const TransactionInfo = IDL.Record({
+    'transactionType' : IDL.Variant({
+      'incoming' : IDL.Null,
+      'walletLoad' : IDL.Null,
+      'affiliatePayout' : IDL.Null,
+      'outgoing' : IDL.Null,
+      'purchase' : IDL.Null,
+    }),
+    'timestamp' : IDL.Int,
+    'recipientAddress' : IDL.Text,
+    'amount' : IDL.Nat,
+    'transactionId' : IDL.Text,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const AdPlacement = IDL.Variant({
+    'mall' : IDL.Null,
+    'homepage' : IDL.Null,
+    'category' : IDL.Null,
+  });
+  const AdType = IDL.Variant({ 'banner' : IDL.Null, 'sidebar' : IDL.Null });
+  const Advertisement = IDL.Record({
+    'id' : IDL.Nat,
+    'clicks' : IDL.Nat,
+    'title' : IDL.Text,
+    'active' : IDL.Bool,
+    'content' : IDL.Text,
+    'placement' : AdPlacement,
+    'views' : IDL.Nat,
+    'createdAt' : IDL.Int,
+    'targetUrl' : IDL.Text,
+    'imageUrl' : IDL.Text,
+    'adType' : AdType,
+  });
+  const AffiliateTier = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'minReferrals' : IDL.Nat,
+    'commissionRate' : IDL.Nat,
+  });
+  const ChatType = IDL.Variant({
+    'group' : IDL.Null,
+    'direct' : IDL.Null,
+    'broadcast' : IDL.Null,
+  });
+  const DisplayContentType = IDL.Variant({
+    'movie' : IDL.Null,
+    'music' : IDL.Null,
+    'advertisement' : IDL.Null,
+  });
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const DisplayScreenContent = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'contentType' : DisplayContentType,
+    'file' : ExternalBlob,
+    'description' : IDL.Text,
+    'isActive' : IDL.Bool,
+    'uploadTime' : IDL.Int,
+    'uploadedBy' : IDL.Principal,
+  });
+  const TermsAndConditions = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'content' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'isActive' : IDL.Bool,
+    'version' : IDL.Text,
   });
   const Time = IDL.Int;
   const RSVP = IDL.Record({
@@ -167,6 +516,52 @@ export const idlFactory = ({ IDL }) => {
     'creditCardNumber' : IDL.Text,
     'viewingHistory' : IDL.Vec(IDL.Nat),
   });
+  const WalletInfoPublic = IDL.Record({
+    'balance' : IDL.Nat,
+    'walletAddress' : IDL.Text,
+    'transactionHistory' : IDL.Vec(TransactionInfo),
+  });
+  const WalletInfo = IDL.Record({
+    'balance' : IDL.Nat,
+    'recoverySeed' : IDL.Text,
+    'walletAddress' : IDL.Text,
+    'transactionHistory' : IDL.Vec(TransactionInfo),
+  });
+  const MessageType = IDL.Variant({
+    'audio' : IDL.Null,
+    'video' : IDL.Null,
+    'file' : IDL.Null,
+    'text' : IDL.Null,
+    'image' : IDL.Null,
+  });
+  const ChatMessage = IDL.Record({
+    'id' : IDL.Nat,
+    'content' : IDL.Text,
+    'fileBlob' : IDL.Opt(ExternalBlob),
+    'sender' : IDL.Principal,
+    'messageType' : MessageType,
+    'timestamp' : IDL.Int,
+    'roomId' : IDL.Nat,
+  });
+  const MediaType = IDL.Variant({
+    'audio' : IDL.Null,
+    'video' : IDL.Null,
+    'image' : IDL.Null,
+  });
+  const MediaContent = IDL.Record({
+    'id' : IDL.Nat,
+    'categories' : IDL.Vec(IDL.Nat),
+    'title' : IDL.Text,
+    'duration' : IDL.Nat,
+    'thumbnail' : ExternalBlob,
+    'views' : IDL.Nat,
+    'file' : ExternalBlob,
+    'description' : IDL.Text,
+    'mediaType' : MediaType,
+    'rating' : IDL.Nat,
+    'uploadTime' : IDL.Int,
+    'uploadedBy' : IDL.Principal,
+  });
   const InviteCode = IDL.Record({
     'created' : Time,
     'code' : IDL.Text,
@@ -180,6 +575,79 @@ export const idlFactory = ({ IDL }) => {
   const UserApprovalInfo = IDL.Record({
     'status' : ApprovalStatus,
     'principal' : IDL.Principal,
+  });
+  const Category = IDL.Record({ 'id' : IDL.Nat, 'name' : IDL.Text });
+  const ImageLibraryItem = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'title' : IDL.Text,
+    'description' : IDL.Text,
+    'image' : ExternalBlob,
+    'uploadTime' : IDL.Int,
+  });
+  const PendingAdminRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'principal' : IDL.Principal,
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'requestedAt' : IDL.Int,
+  });
+  const PendingAffiliatePayout = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'userId' : IDL.Principal,
+    'commissionDetails' : IDL.Text,
+    'amount' : IDL.Nat,
+    'requestedAt' : IDL.Int,
+  });
+  const PendingBroadcastRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'title' : IDL.Text,
+    'userId' : IDL.Principal,
+    'description' : IDL.Text,
+    'requestedAt' : IDL.Int,
+  });
+  const PendingCardLoad = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'method' : IDL.Text,
+    'userId' : IDL.Principal,
+    'amount' : IDL.Nat,
+    'requestedAt' : IDL.Int,
+  });
+  const PendingContent = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'content' : MediaContent,
+    'submittedAt' : IDL.Int,
+    'submittedBy' : IDL.Principal,
+  });
+  const PendingHeroJoinRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'roomId' : IDL.Nat,
+    'requestedAt' : IDL.Int,
+    'requestedBy' : IDL.Principal,
+  });
+  const PendingMemberRegistration = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'principal' : IDL.Principal,
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'requestedAt' : IDL.Int,
+  });
+  const PendingPriceUpdate = IDL.Record({
+    'id' : IDL.Nat,
+    'status' : ApprovalStatus,
+    'itemId' : IDL.Nat,
+    'itemType' : IDL.Text,
+    'oldPrice' : IDL.Nat,
+    'newPrice' : IDL.Nat,
+    'requestedAt' : IDL.Int,
+    'requestedBy' : IDL.Principal,
   });
   const PaymentCancelResponse = IDL.Record({
     'message' : IDL.Text,
@@ -223,11 +691,51 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addTransaction' : IDL.Func([TransactionInfo], [], []),
+    'approveAdminRequest' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approveAffiliatePayout' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approveBroadcastRequest' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approveCardLoad' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approveHeroJoinRequest' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approveImageLibraryItem' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approveMemberRegistration' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approvePendingContent' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
+    'approvePriceUpdate' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'createAdvertisement' : IDL.Func([Advertisement], [IDL.Nat], []),
+    'createAffiliateTier' : IDL.Func([AffiliateTier], [IDL.Nat], []),
+    'createCategory' : IDL.Func([IDL.Text], [IDL.Nat], []),
+    'createChatRoom' : IDL.Func([IDL.Text, ChatType], [IDL.Nat], []),
+    'createTerms' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+    'createWallet' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'deleteAdvertisement' : IDL.Func([IDL.Nat], [], []),
+    'deleteAffiliateTier' : IDL.Func([IDL.Nat], [], []),
+    'deleteCategory' : IDL.Func([IDL.Nat], [], []),
+    'deleteContent' : IDL.Func([IDL.Nat], [], []),
+    'deleteDisplayContent' : IDL.Func([IDL.Nat], [], []),
     'generateInviteCode' : IDL.Func([], [IDL.Text], []),
+    'getActiveAdvertisements' : IDL.Func(
+        [],
+        [IDL.Vec(Advertisement)],
+        ['query'],
+      ),
+    'getActiveDisplayContent' : IDL.Func(
+        [],
+        [IDL.Vec(DisplayScreenContent)],
+        ['query'],
+      ),
+    'getActiveTerms' : IDL.Func([], [IDL.Opt(TermsAndConditions)], ['query']),
     'getAllRSVPs' : IDL.Func([], [IDL.Vec(RSVP)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCallerWallet' : IDL.Func([], [IDL.Opt(WalletInfoPublic)], ['query']),
+    'getCallerWalletWithSeed' : IDL.Func([], [IDL.Opt(WalletInfo)], ['query']),
+    'getChatRoomMessages' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(ChatMessage)],
+        ['query'],
+      ),
+    'getContent' : IDL.Func([IDL.Nat], [IDL.Opt(MediaContent)], ['query']),
     'getInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -236,7 +744,51 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerApproved' : IDL.Func([], [IDL.Bool], ['query']),
+    'listAffiliateTiers' : IDL.Func([], [IDL.Vec(AffiliateTier)], ['query']),
     'listApprovals' : IDL.Func([], [IDL.Vec(UserApprovalInfo)], ['query']),
+    'listCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+    'listContent' : IDL.Func([], [IDL.Vec(MediaContent)], ['query']),
+    'listImageLibraryItems' : IDL.Func(
+        [],
+        [IDL.Vec(ImageLibraryItem)],
+        ['query'],
+      ),
+    'listPendingAdminRequests' : IDL.Func(
+        [],
+        [IDL.Vec(PendingAdminRequest)],
+        ['query'],
+      ),
+    'listPendingAffiliatePayouts' : IDL.Func(
+        [],
+        [IDL.Vec(PendingAffiliatePayout)],
+        ['query'],
+      ),
+    'listPendingBroadcastRequests' : IDL.Func(
+        [],
+        [IDL.Vec(PendingBroadcastRequest)],
+        ['query'],
+      ),
+    'listPendingCardLoads' : IDL.Func(
+        [],
+        [IDL.Vec(PendingCardLoad)],
+        ['query'],
+      ),
+    'listPendingContent' : IDL.Func([], [IDL.Vec(PendingContent)], ['query']),
+    'listPendingHeroJoinRequests' : IDL.Func(
+        [],
+        [IDL.Vec(PendingHeroJoinRequest)],
+        ['query'],
+      ),
+    'listPendingMemberRegistrations' : IDL.Func(
+        [],
+        [IDL.Vec(PendingMemberRegistration)],
+        ['query'],
+      ),
+    'listPendingPriceUpdates' : IDL.Func(
+        [],
+        [IDL.Vec(PendingPriceUpdate)],
+        ['query'],
+      ),
     'paymentCancel' : IDL.Func([IDL.Text], [PaymentCancelResponse], []),
     'paymentSuccess' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
@@ -245,8 +797,25 @@ export const idlFactory = ({ IDL }) => {
       ),
     'requestApproval' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'sendMessage' : IDL.Func(
+        [IDL.Nat, IDL.Text, MessageType, IDL.Opt(ExternalBlob)],
+        [IDL.Nat],
+        [],
+      ),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
     'submitRSVP' : IDL.Func([IDL.Text, IDL.Bool, IDL.Text], [], []),
+    'updateAdvertisement' : IDL.Func([IDL.Nat, Advertisement], [], []),
+    'updateAffiliateTier' : IDL.Func([IDL.Nat, AffiliateTier], [], []),
+    'updateCategory' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'updateContent' : IDL.Func([IDL.Nat, MediaContent], [], []),
+    'updateDisplayContent' : IDL.Func([IDL.Nat, DisplayScreenContent], [], []),
+    'updateTerms' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [],
+        [],
+      ),
+    'uploadContent' : IDL.Func([MediaContent], [IDL.Nat], []),
+    'uploadDisplayContent' : IDL.Func([DisplayScreenContent], [IDL.Nat], []),
   });
 };
 

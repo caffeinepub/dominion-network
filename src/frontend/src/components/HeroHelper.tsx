@@ -303,14 +303,14 @@ export function HeroHelper() {
 
   return (
     <Card 
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[90vw] md:w-[420px] lg:w-[480px] max-w-[500px] shadow-2xl z-50 flex flex-col border-primary/30 holographic-border"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[90vw] md:w-[420px] lg:w-[480px] max-w-[500px] shadow-2xl z-50 flex flex-col border-primary/30 holographic-border bg-card"
       style={{
         height: 'min(600px, calc(100dvh - 6rem))',
         maxHeight: 'calc(100dvh - 6rem)'
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border bg-gradient-to-r from-primary/10 to-accent/10 shrink-0">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border bg-gradient-to-r from-primary/20 to-accent/20 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <div className="relative shrink-0">
             <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full ring-2 ring-primary/50 bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
@@ -361,7 +361,7 @@ export function HeroHelper() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-3 sm:p-4 overflow-y-auto min-h-0">
+      <div className="flex-1 p-3 sm:p-4 overflow-y-auto min-h-0 bg-background/95">
         <div className="space-y-3 pb-2">
           {messages.map((message, index) => (
             <div
@@ -372,7 +372,7 @@ export function HeroHelper() {
                 className={`max-w-[85%] rounded-2xl px-3 py-2.5 ${
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground shadow-lg'
-                    : 'bg-muted border border-border'
+                    : 'bg-card border border-border shadow-sm'
                 }`}
               >
                 <p className="text-xs sm:text-sm leading-relaxed break-words whitespace-pre-line">{message.content}</p>
@@ -395,7 +395,7 @@ export function HeroHelper() {
       </div>
 
       {/* Input */}
-      <div className="p-3 sm:p-4 border-t border-border bg-muted/30 shrink-0">
+      <div className="p-3 sm:p-4 border-t border-border bg-card shrink-0">
         <div className="flex gap-2">
           <Input
             placeholder={isAdmin ? "Ask about admin features..." : "Ask me anything or use voice..."}

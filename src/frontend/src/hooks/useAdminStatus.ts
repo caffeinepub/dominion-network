@@ -1,39 +1,39 @@
-import { useIsCallerAdmin } from './useQueries';
+import { useQuery } from '@tanstack/react-query';
+import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import { useEffect } from 'react';
 
-/**
- * Centralized admin status hook that provides a single source of truth
- * for admin UI visibility and access control across the application.
- * 
- * This hook ensures consistent behavior between AdminRouteGuard and Header
- * by combining identity state with admin status checks.
- */
 export function useAdminStatus() {
+  const { actor, isFetching: actorFetching } = useActor();
   const { identity, isInitializing } = useInternetIdentity();
-  const { data: isAdmin, isLoading: isAdminLoading, refetch, isFetched } = useIsCallerAdmin();
 
-  const isAuthenticated = !!identity;
-  const isLoading = isInitializing || (isAuthenticated && isAdminLoading);
+  const isAuthenticated = !!identity && !isInitializing;
 
-  // Refetch admin status when identity becomes available
-  useEffect(() => {
-    if (identity && !isAdminLoading && !isFetched) {
-      refetch();
-    }
-  }, [identity, isAdminLoading, isFetched, refetch]);
+  const { data: isAdmin, isLoading: isAdminLoading, refetch } = useQuery<boolean>({
+    queryKey: ['isCallerAdmin', identity?.getPrincipal().toString()],
+    queryFn: async () => {
+      if (!actor || !identity) return false;
+      try {
+        const result = await actor.isCallerAdmin();
+        return result === true;
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+      }
+    },
+    enabled: !!actor && !!identity && !actorFetching && !isInitializing,
+    retry: 1,
+    staleTime: 30000,
+    gcTime: 60000,
+  });
 
-  // Admin UI should only show when:
-  // 1. User is authenticated
-  // 2. Admin status check has completed
-  // 3. User is confirmed as admin
-  const canShowAdminUI = isAuthenticated && !isLoading && isAdmin === true;
+  const canShowAdminUI = isAuthenticated && isAdmin === true;
+  const isLoading = isInitializing || actorFetching || (isAuthenticated && isAdminLoading);
 
   return {
-    isAdmin: isAdmin === true,
-    isAdminLoading: isLoading,
-    canShowAdminUI,
     isAuthenticated,
+    isAdmin: isAdmin === true,
+    canShowAdminUI,
+    isAdminLoading: isLoading,
     refetchAdminStatus: refetch,
   };
 }

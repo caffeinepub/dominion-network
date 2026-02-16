@@ -1,97 +1,135 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T21:32:57.494Z",
+  "generatedAt": "2026-02-16T15:44:26.472Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 2,
+    "total": 6,
+    "implemented": 6,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Restore a complete, working Admin navigation experience so authenticated admins can reliably access every required admin room from (1) the Header Admin dropdown and (2) the Admin Rooms hub page at /admin/rooms.",
-        "status": "missing",
+        "summary": "Make the selected-admin invite link login/redemption flow fully functional end-to-end: admins can open an invite URL containing a token, log in with Internet Identity, redeem the token, and then successfully access admin routes.",
+        "status": "implemented",
         "plannedFiles": [
-          "frontend/src/constants/adminNav.ts",
-          "frontend/src/components/Header.tsx",
-          "frontend/src/pages/AdminRoomsPage.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/AdminInviteLinksPage.tsx",
+          "frontend/src/pages/AdminInviteAcceptPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/utils/urlParams.ts"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/pages/AdminInviteLinksPage.tsx",
+          "frontend/src/pages/AdminInviteAcceptPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/utils/urlParams.ts"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "Ensure the admin access flow is correct and consistent: all admin routes are protected, admins can access them, and non-admin users (or logged-out users) are blocked using the existing AdminAccessDenied screen without crashes or infinite loading states.",
+        "summary": "Implement working approval actions so that all approval/decision buttons in the admin approval areas are enabled and perform real approve/reject operations against the backend for every approval type shown in the UI.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/AdminRouteGuard.tsx",
-          "frontend/src/hooks/useAdminStatus.ts",
           "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/AdminAccessDenied.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/AdminApprovalPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/AdminRouteGuard.tsx",
-          "frontend/src/hooks/useAdminStatus.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminApprovalPage.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Rebuild and/or verify that all required admin rooms and panels are present, routable, and do not crash; ensure each page renders with safe loading/empty/error states and that primary actions work end-to-end with the backend where supported. Required rooms: approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, and mall admin.",
+        "summary": "Enable full edit capabilities for admins across admin-managed entities already present in the UI (not just create/delete), including adding backend update methods where missing and adding corresponding edit UI flows.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useActorCapabilities.ts",
-          "frontend/src/components/admin/AdminCapabilityNotice.tsx",
-          "frontend/src/pages/AdminMemberDirectoryPage.tsx",
-          "frontend/src/pages/AdminAdsPage.tsx",
-          "frontend/src/pages/AdminAffiliatePage.tsx",
-          "frontend/src/pages/AdminInviteLinksPage.tsx",
-          "frontend/src/pages/AdminInviteAcceptPage.tsx",
-          "frontend/src/pages/AdminApprovalPage.tsx",
-          "frontend/src/pages/AdminEditingRoomPage.tsx",
-          "frontend/src/pages/AdminMediaUploadRoomPage.tsx",
-          "frontend/src/pages/AdminImageLibraryPage.tsx",
-          "frontend/src/pages/AdminPricingTermsPage.tsx",
-          "frontend/src/pages/AdminPriceControlRoomPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminContentPage.tsx",
           "frontend/src/pages/AdminDisplayPage.tsx",
-          "frontend/src/pages/AdminMallPage.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/pages/AdminAdsPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/AdminCapabilityNotice.tsx",
-          "frontend/src/pages/AdminMemberDirectoryPage.tsx",
-          "frontend/src/pages/AdminAdsPage.tsx",
-          "frontend/src/pages/AdminAffiliatePage.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminAdsPage.tsx"
         ]
       },
       {
         "id": "REQ-4",
-        "summary": "Prevent regressions: keep all existing requested functionality working while finishing the admin system, and ensure no new runtime errors are introduced in unrelated areas (public pages, wallet, credit card, streaming partners, chat).",
-        "status": "missing",
+        "summary": "Ensure uploads can be performed by all admins in all admin upload rooms, including aligning backend authorization so admins are permitted to upload where currently restricted to regular users only.",
+        "status": "implemented",
         "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminMediaUploadRoomPage.tsx",
+          "frontend/src/pages/AdminImageLibraryPage.tsx",
+          "frontend/src/pages/AdminContentPage.tsx",
+          "frontend/src/pages/AdminDisplayPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Fix responsive layout issues across all pages so no text or images overlap or render off-screen on common breakpoints (mobile, tablet, desktop), including admin pages with wide tab lists/tables.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AdminApprovalPage.tsx",
+          "frontend/src/pages/AdminAdsPage.tsx",
           "frontend/src/components/Header.tsx",
           "frontend/src/components/Layout.tsx",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/App.tsx"
+          "frontend/src/index.css"
         ],
-        "matchedFiles": []
+        "matchedFiles": [
+          "frontend/src/pages/AdminApprovalPage.tsx",
+          "frontend/src/pages/AdminAdsPage.tsx",
+          "frontend/src/index.css"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Apply a coherent visual theme consistently across the app UI (colors, typography, surfaces) that improves readability on dark backgrounds while keeping the current information architecture unchanged.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/Layout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/index.css"
+        ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AdminRouteGuard.tsx",
-    "frontend/src/components/admin/AdminCapabilityNotice.tsx",
-    "frontend/src/hooks/useAdminStatus.ts",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/AdBanner.tsx",
+    "frontend/src/components/AdSidebar.tsx",
+    "frontend/src/components/ChatRoomComponent.tsx",
+    "frontend/src/components/ContentGrid.tsx",
+    "frontend/src/config.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
     "frontend/src/pages/AdminAdsPage.tsx",
-    "frontend/src/pages/AdminAffiliatePage.tsx",
-    "frontend/src/pages/AdminMemberDirectoryPage.tsx",
+    "frontend/src/pages/AdminApprovalPage.tsx",
+    "frontend/src/pages/AdminEditingRoomPage.tsx",
+    "frontend/src/pages/AdminHiiYahChatPage.tsx",
+    "frontend/src/pages/AdminInviteAcceptPage.tsx",
+    "frontend/src/pages/AdminInviteLinksPage.tsx",
+    "frontend/src/pages/AffiliateDashboardPage.tsx",
+    "frontend/src/pages/CategoryPage.tsx",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

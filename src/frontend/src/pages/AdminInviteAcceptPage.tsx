@@ -4,68 +4,57 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useActor } from '../hooks/useActor';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRedeemAdminInvite } from '../hooks/useQueries';
 import { useNavigate } from '@tanstack/react-router';
-import { toast } from 'sonner';
+import { persistInviteToken, getPersistedInviteToken, clearPersistedInviteToken } from '../utils/urlParams';
 
 export function AdminInviteAcceptPage() {
-  const [token, setToken] = useState<string | null>(null);
-  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'needsLogin'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'needsLogin' | 'missingToken'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const { identity, login, isLoggingIn } = useInternetIdentity();
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
+  const redeemInvite = useRedeemAdminInvite();
   const navigate = useNavigate();
-
-  const redeemInvite = useMutation({
-    mutationFn: async (inviteToken: string) => {
-      if (!actor || typeof (actor as any).redeemAdminInvite !== 'function') {
-        toast.error('Invite redemption not available');
-        throw new Error('Method not available');
-      }
-      return (actor as any).redeemAdminInvite(inviteToken);
-    },
-    onSuccess: () => {
-      toast.success('Admin privileges granted successfully');
-      queryClient.invalidateQueries({ queryKey: ['isCallerAdmin'] });
-      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
-    },
-    onError: () => {
-      toast.error('Failed to redeem invite link');
-    },
-  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const inviteToken = params.get('token');
-    
-    if (!inviteToken) {
-      setStatus('error');
+    const urlToken = params.get('token');
+    const persistedToken = getPersistedInviteToken();
+    const token = urlToken || persistedToken;
+
+    if (!token) {
+      setStatus('missingToken');
+      setErrorMessage('No invitation token provided');
       return;
     }
-    
-    setToken(inviteToken);
-    
+
+    // Persist token if it came from URL
+    if (urlToken) {
+      persistInviteToken(urlToken);
+    }
+
     if (!identity) {
       setStatus('needsLogin');
       return;
     }
-    
+
     // Auto-redeem if logged in
-    handleRedeem(inviteToken);
+    handleRedeem(token);
   }, [identity]);
 
-  const handleRedeem = async (inviteToken: string) => {
+  const handleRedeem = async (token: string) => {
     try {
       setStatus('loading');
-      await redeemInvite.mutateAsync(inviteToken);
+      await redeemInvite.mutateAsync(token);
+      clearPersistedInviteToken();
       setStatus('success');
       setTimeout(() => {
         navigate({ to: '/admin/approvals' });
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to redeem invite:', error);
+      clearPersistedInviteToken();
       setStatus('error');
+      setErrorMessage(error.message || 'Invalid or already used invitation');
     }
   };
 
@@ -73,9 +62,10 @@ export function AdminInviteAcceptPage() {
     try {
       await login();
       // After login, the useEffect will trigger redemption
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
       setStatus('error');
+      setErrorMessage('Login failed. Please try again.');
     }
   };
 
@@ -142,15 +132,17 @@ export function AdminInviteAcceptPage() {
             </div>
           )}
 
-          {status === 'error' && (
+          {(status === 'error' || status === 'missingToken') && (
             <div className="text-center space-y-4">
               <div className="mx-auto h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
                 <XCircle className="h-10 w-10 text-destructive" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-destructive">Invalid Invitation</h3>
-                <p className="text-muted-foreground">
-                  This invitation link is invalid or has already been used.
+                <h3 className="text-xl font-semibold text-destructive">
+                  {status === 'missingToken' ? 'Missing Token' : 'Invalid Invitation'}
+                </h3>
+                <p className="text-muted-foreground break-words">
+                  {errorMessage || 'This invitation link is invalid or has already been used.'}
                 </p>
               </div>
               <Button

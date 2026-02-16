@@ -1,26 +1,58 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
+  "summary": "App build focused on admin functionality fixes (login link, approvals, edit permissions, uploads) and ensuring responsive UI with no overlaps across devices.",
   "architectural_notes": [],
   "known_issues": [
-    "Admin area work is incomplete / does not meet the requested requirements yet"
+    "Previous build attempt failed: AI unable to implement request; may require simplified flow/prompting to proceed."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-ensure-the-admin-access-flow-is-correct-and-consistent-all-admin-routes-are-protected-admins-can-access-them-and-non-admin-users-or-logged-out-users-are-blocked-using-the-existing-adminaccessdenied-screen-without-crashes-or-infinite-loading-states",
-      "title": "Ensure the admin access flow is correct and consistent: all admin routes are protected, admins can access them, and non-admin users (or logged-out users) are blocked using the existing AdminAccessDenied screen without crashes or infinite loading states.",
+      "id": "feature-make-the-selected-admin-invite-link-login-redemption-flow-fully-functional-end-to-end-admins-can-open-an-invite-url-containing-a-token-log-in-with-internet-identity-redeem-the-token-and-then-successfully-access-admin-routes",
+      "title": "Make the selected-admin invite link login/redemption flow fully functional end-to-end: admins can open an invite URL containing a token, log in with Internet Identity, redeem the token, and then successfully access admin routes.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-working-approval-actions-so-that-all-approval-decision-buttons-in-the-admin-approval-areas-are-enabled-and-perform-real-approve-reject-operations-against-the-backend-for-every-approval-type-shown-in-the-ui",
+      "title": "Implement working approval actions so that all approval/decision buttons in the admin approval areas are enabled and perform real approve/reject operations against the backend for every approval type shown in the UI.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-rebuild-and-or-verify-that-all-required-admin-rooms-and-panels-are-present-routable-and-do-not-crash-ensure-each-page-renders-with-safe-loading-empty-error-states-and-that-primary-actions-work-end-to-end-with-the-backend-where-supported-required-rooms-approvals-dashboards-editing-room-uploads-pricing-terms-price-control-image-library-wallet-management-ads-affiliate-member-directory-invite-links-display-screen-and-mall-admin",
-      "title": "Rebuild and/or verify that all required admin rooms and panels are present, routable, and do not crash; ensure each page renders with safe loading/empty/error states and that primary actions work end-to-end with the backend where supported. Required rooms: approvals dashboards, editing room, uploads, pricing/terms, price control, image library, wallet management, ads, affiliate, member directory, invite links, display screen, and mall admin.",
+      "id": "feature-enable-full-edit-capabilities-for-admins-across-admin-managed-entities-already-present-in-the-ui-not-just-create-delete-including-adding-backend-update-methods-where-missing-and-adding-corresponding-edit-ui-flows",
+      "title": "Enable full edit capabilities for admins across admin-managed entities already present in the UI (not just create/delete), including adding backend update methods where missing and adding corresponding edit UI flows.",
       "reqIds": [
         "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-uploads-can-be-performed-by-all-admins-in-all-admin-upload-rooms-including-aligning-backend-authorization-so-admins-are-permitted-to-upload-where-currently-restricted-to-regular-users-only",
+      "title": "Ensure uploads can be performed by all admins in all admin upload rooms, including aligning backend authorization so admins are permitted to upload where currently restricted to regular users only.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-responsive-layout-issues-across-all-pages-so-no-text-or-images-overlap-or-render-off-screen-on-common-breakpoints-mobile-tablet-desktop-including-admin-pages-with-wide-tab-lists-tables",
+      "title": "Fix responsive layout issues across all pages so no text or images overlap or render off-screen on common breakpoints (mobile, tablet, desktop), including admin pages with wide tab lists/tables.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-coherent-visual-theme-consistently-across-the-app-ui-colors-typography-surfaces-that-improves-readability-on-dark-backgrounds-while-keeping-the-current-information-architecture-unchanged",
+      "title": "Apply a coherent visual theme consistently across the app UI (colors, typography, surfaces) that improves readability on dark backgrounds while keeping the current information architecture unchanged.",
+      "reqIds": [
+        "REQ-6"
       ],
       "version": 1
     }
@@ -28,28 +60,36 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Complete the admin area as originally requested (finish required admin functionality/flows)",
+      "summary": "Activate and verify selected-admin login link works properly",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Restore a complete, working Admin navigation experience so authenticated admins can reliably access every required admin room from (1) the Header Admin dropdown and (2) the Admin Rooms hub page at /admin/rooms.",
-      "reqIds": [
-        "REQ-1"
-      ],
+      "summary": "Ensure admin approval buttons are enabled ('hot') and functioning correctly",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Enable full edit capabilities for admins",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Allow uploads to be made by all admins",
+      "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-5",
-      "summary": "Prevent regressions: keep all existing requested functionality working while finishing the admin system, and ensure no new runtime errors are introduced in unrelated areas (public pages, wallet, credit card, streaming partners, chat).",
-      "reqIds": [
-        "REQ-4"
-      ],
+      "summary": "Fix responsive layout: no overlapping; all images/text fully visible across all devices",
+      "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Complete and fix the Admin area (navigation, access flow, and all required admin rooms)",
+  "projectName": "Dominion Admin Suite",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

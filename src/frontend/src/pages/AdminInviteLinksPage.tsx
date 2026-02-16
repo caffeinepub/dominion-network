@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Plus, Check, Link as LinkIcon } from 'lucide-react';
+import { Copy, Plus, Check, LinkIcon } from 'lucide-react';
 import { useActor } from '../hooks/useActor';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -37,7 +37,7 @@ export function AdminInviteLinksPage() {
   });
 
   const copyToClipboard = (code: string) => {
-    const inviteUrl = `${window.location.origin}/admin/invite-accept?token=${code}`;
+    const inviteUrl = `${window.location.origin}/invite/accept?token=${code}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopiedCode(code);
     toast.success('Invite link copied to clipboard!');
@@ -48,27 +48,28 @@ export function AdminInviteLinksPage() {
   const usedCodes = inviteCodes.filter((code) => code.used);
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto px-4 py-8 space-y-8 max-w-7xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold gradient-text flex items-center gap-3">
-            <LinkIcon className="h-8 w-8" />
-            Admin Invite Links
+          <h1 className="text-2xl sm:text-3xl font-bold gradient-text flex items-center gap-3">
+            <LinkIcon className="h-6 w-6 sm:h-8 sm:w-8 shrink-0" />
+            <span className="break-words">Admin Invite Links</span>
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Generate and manage invitation links for new administrators
           </p>
         </div>
         <Button
           onClick={() => generateInviteCode.mutate()}
           disabled={generateInviteCode.isPending}
+          className="shrink-0"
         >
           <Plus className="h-4 w-4 mr-2" />
           Generate New Code
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Available Codes */}
         <Card>
           <CardHeader>
@@ -91,11 +92,11 @@ export function AdminInviteLinksPage() {
                     key={code.code}
                     className="p-4 border rounded-lg space-y-2 hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center justify-between">
-                      <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                    <div className="flex items-center justify-between gap-2">
+                      <code className="text-sm font-mono bg-muted px-2 py-1 rounded break-all">
                         {code.code}
                       </code>
-                      <Badge variant="secondary">Available</Badge>
+                      <Badge variant="secondary" className="shrink-0">Available</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Created: {new Date(Number(code.created) / 1000000).toLocaleDateString()}
@@ -145,11 +146,11 @@ export function AdminInviteLinksPage() {
                     key={code.code}
                     className="p-4 border rounded-lg space-y-2 opacity-60"
                   >
-                    <div className="flex items-center justify-between">
-                      <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                    <div className="flex items-center justify-between gap-2">
+                      <code className="text-sm font-mono bg-muted px-2 py-1 rounded break-all">
                         {code.code}
                       </code>
-                      <Badge variant="outline">Used</Badge>
+                      <Badge variant="outline" className="shrink-0">Used</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Created: {new Date(Number(code.created) / 1000000).toLocaleDateString()}

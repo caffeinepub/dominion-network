@@ -8,7 +8,7 @@ interface AdBannerProps {
 }
 
 export function AdBanner({ placement }: AdBannerProps) {
-  const { data: ads = [] } = useGetAdsByPlacement(placement);
+  const { data: ads = [] } = useGetAdsByPlacement();
   const trackView = useTrackAdView();
   const trackClick = useTrackAdClick();
 
